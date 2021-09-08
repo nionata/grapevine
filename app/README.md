@@ -17,6 +17,7 @@ To begin local development, follow the [React Native docs](https://reactnative.d
 From the `app` directory:
 
 - Install node dependencies with `npm install`
+- Install Cocoapods in the iOS directory with `cd ios && pod install && cd ..`
 - Start Metro: `npm run start`
 - After Metro has launched, __in a new terminal__, start the application:
   - For iOS: `npm run ios`
