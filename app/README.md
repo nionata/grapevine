@@ -14,6 +14,9 @@ To begin local development, follow the [React Native docs](https://reactnative.d
 
 ### Starting local environment:
 
+From the `app` directory:
+
+- Install node dependencies with `npm install`
 - Start Metro: `npm run start`
 - After Metro has launched, __in a new terminal__, start the application:
   - For iOS: `npm run ios`
