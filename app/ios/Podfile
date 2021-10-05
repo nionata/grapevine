@@ -17,6 +17,8 @@ target 'Grapevine' do
     # Pods for testing
   end
 
+  # Load vector icons
+
   # Enables Flipper.
   #
   # Note that if you have use_frameworks! enabled, Flipper will not work and
