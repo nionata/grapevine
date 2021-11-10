@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, Card, Incubator, Button } from 'react-native-ui-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cleanUpSwearyString } from 'swears';
 
 function SettingsScreen() {
   const [messageTransmitText, setMessageText] = React.useState<string | null>(
@@ -28,6 +29,10 @@ function SettingsScreen() {
   const saveMessage: () => Promise<boolean> = async () => {
     try {
       if (messageInput) {
+        // Censor the message before we save it
+        const cleanedInput = cleanUpSwearyString(messageInput);
+        setMessageInput(cleanedInput);
+        setMessageText(cleanedInput);
         await AsyncStorage.setItem('@grapevine_message', messageInput);
       }
       setIsEditingMessage(false);
