@@ -1,5 +1,12 @@
 import React, { useEffect } from 'react';
-import { View, Text, Card, Incubator, Button } from 'react-native-ui-lib';
+import {
+  View,
+  Text,
+  Card,
+  Incubator,
+  Button,
+  Switch,
+} from 'react-native-ui-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleanUpSwearyString } from 'swears';
 
@@ -10,6 +17,7 @@ function SettingsScreen() {
   const [isEditingMessage, setIsEditingMessage] =
     React.useState<boolean>(false);
   const [messageInput, setMessageInput] = React.useState<string>('');
+  const [isTransmitting, setIsTransmitting] = React.useState<boolean>(true);
 
   const getMessage: () => Promise<string | null> = async () => {
     try {
@@ -33,7 +41,7 @@ function SettingsScreen() {
         const cleanedInput = cleanUpSwearyString(messageInput);
         setMessageInput(cleanedInput);
         setMessageText(cleanedInput);
-        await AsyncStorage.setItem('@grapevine_message', messageInput);
+        await AsyncStorage.setItem('@grapevine_message', cleanedInput);
       }
       setIsEditingMessage(false);
       console.log('Saved message successfully');
@@ -50,11 +58,31 @@ function SettingsScreen() {
     }
   };
 
+  const getIsTranmittingSetting: () => Promise<void> = async () => {
+    try {
+      const shouldTransmit =
+        (await AsyncStorage.getItem('@grapevine_is_transmitting')) === 'true';
+      setIsTransmitting(shouldTransmit);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const saveIsTransmittingSetting: (shouldTransmit: boolean) => Promise<void> =
+    async (shouldTransmit) => {
+      await AsyncStorage.setItem(
+        '@grapevine_is_transmitting',
+        shouldTransmit ? 'true' : 'false'
+      );
+      setIsTransmitting(shouldTransmit);
+    };
+
   useEffect(() => {
     getMessage();
+    getIsTranmittingSetting();
   }, []);
 
-  const messageCardContents =
+  const editMessageCardContents =
     messageTransmitText !== null && !isEditingMessage ? (
       <View>
         <Text>{messageTransmitText}</Text>
@@ -88,9 +116,25 @@ function SettingsScreen() {
       </View>
     );
 
+  const otherSettingsCardContents = (
+    <View row centerV>
+      <Switch
+        onColor={'blueviolet'}
+        offColor={'lightgray'}
+        value={isTransmitting}
+        onValueChange={saveIsTransmittingSetting}
+        marginR-10
+      />
+      <Text>Transmit Message</Text>
+    </View>
+  );
+
   return (
     <View padding-20>
-      <Card padding-20>{messageCardContents}</Card>
+      <Card padding-20>{editMessageCardContents}</Card>
+      <Card marginT-20 padding-20>
+        {otherSettingsCardContents}
+      </Card>
     </View>
   );
 }
