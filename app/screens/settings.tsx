@@ -9,6 +9,7 @@ import {
 } from 'react-native-ui-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleanUpSwearyString } from 'swears';
+import { StyleSheet } from 'react-native';
 
 function SettingsScreen() {
   const [messageTransmitText, setMessageText] = React.useState<string | null>(
@@ -82,14 +83,18 @@ function SettingsScreen() {
     getIsTranmittingSetting();
   }, []);
 
+  const styles = StyleSheet.create({
+    cardHeader: {
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    bold: {
+      fontWeight: 'bold',
+    },
+  });
+
   const editMessageCardHeader = (
-    <Text
-      style={{
-        fontSize: 20,
-        fontWeight: 'bold',
-      }}
-      marginB-10
-    >
+    <Text style={styles.cardHeader} marginB-10>
       Message to Transmit
     </Text>
   );
@@ -134,13 +139,7 @@ function SettingsScreen() {
 
   const otherSettingsCardContents = (
     <View>
-      <Text
-        style={{
-          fontSize: 20,
-          fontWeight: 'bold',
-        }}
-        marginB-10
-      >
+      <Text style={styles.cardHeader} marginB-10>
         Transmission Settings
       </Text>
       <View row centerV>
@@ -165,18 +164,11 @@ function SettingsScreen() {
   const statsCardContents = (
     <View>
       <View centerV>
-        <Text
-          style={{
-            fontSize: 20,
-            fontWeight: 'bold',
-          }}
-          marginB-10
-        >
+        <Text style={styles.cardHeader} marginB-10>
           Stats
         </Text>
         <Text>
-          <Text style={{ fontWeight: 'bold' }}>20</Text>: Number of message
-          transmissions
+          <Text style={styles.bold}>20</Text>: Number of message transmissions
         </Text>
       </View>
     </View>
