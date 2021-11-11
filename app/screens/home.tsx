@@ -7,7 +7,7 @@ const messages: string[] = [
   'Nick, can you hear me?',
 ];
 
-function VineScreen() {
+function HomeScreen() {
   const messageCards = messages.map((message, index) => (
     <Card paddingV-5 paddingH-5 marginV-10 activeOpacity={1} key={index}>
       <Text>{message}</Text>
@@ -17,4 +17,4 @@ function VineScreen() {
   return <View padding-20>{messageCards}</View>;
 }
 
-export default VineScreen;
+export default HomeScreen;

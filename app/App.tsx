@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import VineScreen from './screens/vine';
+import HomeScreen from './screens/home';
 import SettingsScreen from './screens/settings';
 
 const Tab = createBottomTabNavigator();
@@ -17,7 +17,7 @@ const App = () => {
           tabBarIcon: ({ focused, color, size }) => {
             let iconName: string = '';
 
-            if (route.name === 'Vine') {
+            if (route.name === 'GrapeVine') {
               iconName = focused ? 'home' : 'home-outline';
             } else if (route.name === 'Settings') {
               iconName = focused ? 'cog' : 'cog-outline';
@@ -30,7 +30,7 @@ const App = () => {
           tabBarInactiveTintColor: 'gray',
         })}
       >
-        <Tab.Screen name="Vine" component={VineScreen} />
+        <Tab.Screen name="GrapeVine" component={HomeScreen} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </NavigationContainer>
