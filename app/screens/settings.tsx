@@ -92,11 +92,11 @@ function SettingsScreen() {
           backgroundColor="blueviolet"
           label="Edit Message"
           enableShadow
-          onPress={() => {
-            setIsEditingMessage(true);
-            console.log('isEditingMessage', isEditingMessage);
-          }}
+          onPress={() => setIsEditingMessage(true)}
         />
+        <Text color={'gray'} marginT-10>
+          This is the message that will be transmitted to other GrapeVineusers.
+        </Text>
       </View>
     ) : (
       <View>
@@ -107,25 +107,42 @@ function SettingsScreen() {
           onChangeText={setMessageInput}
         />
         <Button
-          marginT-20
+          marginT-10
           backgroundColor="blueviolet"
           label="Set Message"
           size={Button.sizes.small}
           onPress={saveMessage}
         />
+        <Text color={'gray'} marginT-10>
+          This is the message that will be transmitted to other GrapeVineusers.
+        </Text>
       </View>
     );
 
   const otherSettingsCardContents = (
-    <View row centerV>
-      <Switch
-        onColor={'blueviolet'}
-        offColor={'lightgray'}
-        value={isTransmitting}
-        onValueChange={saveIsTransmittingSetting}
-        marginR-10
-      />
-      <Text>Transmit Message</Text>
+    <View>
+      <View row centerV>
+        <Switch
+          onColor={'blueviolet'}
+          offColor={'lightgray'}
+          value={isTransmitting}
+          onValueChange={saveIsTransmittingSetting}
+          marginR-10
+        />
+        <Text>Transmit Message</Text>
+      </View>
+      <View paddingT-10>
+        <Text color={'gray'}>
+          Controls whether your message will be transmitted to other GrapeVine
+          users.
+        </Text>
+      </View>
+    </View>
+  );
+
+  const statsCardContents = (
+    <View>
+      <View row centerV />
     </View>
   );
 
