@@ -82,6 +82,18 @@ function SettingsScreen() {
     getIsTranmittingSetting();
   }, []);
 
+  const editMessageCardHeader = (
+    <Text
+      style={{
+        fontSize: 20,
+        fontWeight: 'bold',
+      }}
+      marginB-10
+    >
+      Message to Transmit
+    </Text>
+  );
+
   const editMessageCardContents =
     messageTransmitText !== null && !isEditingMessage ? (
       <View>
@@ -94,15 +106,11 @@ function SettingsScreen() {
           enableShadow
           onPress={() => setIsEditingMessage(true)}
         />
-        <Text color={'gray'} marginT-10>
-          This is the message that will be transmitted to other GrapeVineusers.
-        </Text>
       </View>
     ) : (
       <View>
         <Incubator.TextField
           value={messageInput}
-          label="Message to transmit"
           placeholder="Please set a message"
           onChangeText={setMessageInput}
         />
@@ -113,14 +121,28 @@ function SettingsScreen() {
           size={Button.sizes.small}
           onPress={saveMessage}
         />
-        <Text color={'gray'} marginT-10>
-          This is the message that will be transmitted to other GrapeVineusers.
-        </Text>
       </View>
     );
 
+  const editMessageCardHelpText = (
+    <View paddingT-10>
+      <Text color={'gray'}>
+        This is the message that will be transmitted to other GrapeVineusers.
+      </Text>
+    </View>
+  );
+
   const otherSettingsCardContents = (
     <View>
+      <Text
+        style={{
+          fontSize: 20,
+          fontWeight: 'bold',
+        }}
+        marginB-10
+      >
+        Transmission Settings
+      </Text>
       <View row centerV>
         <Switch
           onColor={'blueviolet'}
@@ -142,15 +164,36 @@ function SettingsScreen() {
 
   const statsCardContents = (
     <View>
-      <View row centerV />
+      <View centerV>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: 'bold',
+          }}
+          marginB-10
+        >
+          Stats
+        </Text>
+        <Text>
+          <Text style={{ fontWeight: 'bold' }}>20</Text>: Number of message
+          transmissions
+        </Text>
+      </View>
     </View>
   );
 
   return (
     <View padding-20>
-      <Card padding-20>{editMessageCardContents}</Card>
+      <Card padding-20>
+        {editMessageCardHeader}
+        {editMessageCardContents}
+        {editMessageCardHelpText}
+      </Card>
       <Card marginT-20 padding-20>
         {otherSettingsCardContents}
+      </Card>
+      <Card marginT-20 padding-20>
+        {statsCardContents}
       </Card>
     </View>
   );
