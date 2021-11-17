@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Card, Text } from 'react-native-ui-lib';
-import { Messages, Message } from '@api/message';
+import { Messages, Message } from 'api/message';
 
 const messages: Messages = {
   'messages': [
