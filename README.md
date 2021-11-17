@@ -3,9 +3,15 @@ A mobile application that enables anonymous gossip messaging peer-to-peer with d
 
 ## Technology Overview 
 
+### API
+
+API specific docs [here](/api).
+
+Our platform-neutral data structure for exchanges from device to device and server to device is [Protobuf](https://developers.google.com/protocol-buffers).
+
 ### App
 
-App specific docs see [here](/app). 
+App specific docs [here](/app). 
 
 The foundation of the mobile application is react native. Custom platform specific modules are used to perform bluetooth low energy networking.
 
@@ -13,4 +19,4 @@ The foundation of the mobile application is react native. Custom platform specif
 
 ### Server (v1)
 
-Server specific docs see [here](/server). 
+Server specific docs [here](/server). 

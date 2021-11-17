@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+// A grapevine message received from a peripheral
+message Message {
+  // Plain text content
+  string message = 1;
+  // The peripheral id of the device that transmitted the message
+  string peripheralId = 2;
+}
+
+// A list of grapevine messages
+message Messages {
+  repeated Message messages = 1;
+}
