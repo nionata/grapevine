@@ -8,6 +8,7 @@ module.exports = {
         root: ['./src/'],
         alias: {
           'api': './api',
+          'screens': './src/screens'
         },
         extensions: [
           '.ios.ts',
