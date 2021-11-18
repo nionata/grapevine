@@ -1,12 +1,13 @@
+/* eslint-disable prettier/prettier */
 module.exports = {
   presets: ['module:metro-react-native-babel-preset'],
   plugins: [
     [
       'module-resolver',
       {
-        root: ['./'],
+        root: ['./src/'],
         alias: {
-          'api': './api'
+          'api': './api',
         },
         extensions: [
           '.ios.ts',
@@ -19,7 +20,7 @@ module.exports = {
           '.js',
           '.json',
         ],
-      }
-    ]
-  ]
+      },
+    ],
+  ],
 };
