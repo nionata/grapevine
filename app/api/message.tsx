@@ -1,8 +1,8 @@
-/* eslint-disable */
-import { util, configure, Writer, Reader } from "protobufjs/minimal";
-import * as Long from "long";
+/* eslint-disable no-bitwise */
+import { util, configure, Writer, Reader } from 'protobufjs/minimal';
+import Long from 'long';
 
-export const protobufPackage = "";
+export const protobufPackage = '';
 
 /** A grapevine message received from a peripheral */
 export interface Message {
@@ -17,14 +17,14 @@ export interface Messages {
   messages: Message[];
 }
 
-const baseMessage: object = { content: "", peripheralId: "" };
+const baseMessage: object = { content: '', peripheralId: '' };
 
 export const Message = {
   encode(message: Message, writer: Writer = Writer.create()): Writer {
-    if (message.content !== "") {
+    if (message.content !== '') {
       writer.uint32(10).string(message.content);
     }
-    if (message.peripheralId !== "") {
+    if (message.peripheralId !== '') {
       writer.uint32(18).string(message.peripheralId);
     }
     return writer;
@@ -56,11 +56,11 @@ export const Message = {
     message.content =
       object.content !== undefined && object.content !== null
         ? String(object.content)
-        : "";
+        : '';
     message.peripheralId =
       object.peripheralId !== undefined && object.peripheralId !== null
         ? String(object.peripheralId)
-        : "";
+        : '';
     return message;
   },
 
@@ -74,8 +74,8 @@ export const Message = {
 
   fromPartial(object: DeepPartial<Message>): Message {
     const message = { ...baseMessage } as Message;
-    message.content = object.content ?? "";
-    message.peripheralId = object.peripheralId ?? "";
+    message.content = object.content ?? '';
+    message.peripheralId = object.peripheralId ?? '';
     return message;
   },
 };
