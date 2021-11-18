@@ -2,8 +2,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import HomeScreen from './screens/home';
-import SettingsScreen from './screens/settings';
+import HomeScreen from 'screens/home';
+import AdvertiseScreen from 'screens/advertise';
+import SettingsScreen from 'screens/settings';
 
 const Tab = createBottomTabNavigator();
 
@@ -19,6 +20,8 @@ const App = () => {
 
             if (route.name === 'GrapeVine') {
               iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'Advertise') {
+              iconName = focused ? 'bluetooth' : 'bluetooth-outline'
             } else if (route.name === 'Settings') {
               iconName = focused ? 'cog' : 'cog-outline';
             }
@@ -31,6 +34,7 @@ const App = () => {
         })}
       >
         <Tab.Screen name="GrapeVine" component={HomeScreen} />
+        <Tab.Screen name="Advertise" component={AdvertiseScreen} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </NavigationContainer>
