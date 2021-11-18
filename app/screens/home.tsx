@@ -3,18 +3,19 @@ import { View, Card, Text } from 'react-native-ui-lib';
 import { Messages, Message } from 'api/message';
 
 const messages: Messages = {
-  'messages': [
+  messages: [
     Message.fromJSON({
-      'content': 'Here\'s a message I collected. Grapevine is dope!',
+      content: "Here's a message I collected. Grapevine is dope!",
     }),
     Message.fromJSON({
-      'content': 'Here\'s another message I collected. I think Grapevine is okay, but we need to get more people on.',
+      content:
+        "Here's another message I collected. I think Grapevine is okay, but we need to get more people on.",
     }),
     Message.fromJSON({
-      'content': 'Nick, can you hear me?',
-    })
-  ]
-}
+      content: 'Nick, can you hear me?',
+    }),
+  ],
+};
 
 function HomeScreen() {
   const messageCards = messages.messages.map((message, index) => (
@@ -27,4 +28,3 @@ function HomeScreen() {
 }
 
 export default HomeScreen;
- 
