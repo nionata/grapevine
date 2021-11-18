@@ -12,23 +12,24 @@ function ScanScreen() {
         console.error(error);
         return;
       } else if (!device) {
-        console.error('Device not found?');
+        console.error('Device was null', device);
         return;
       }
 
-      if (discoveredDevices.filter((d) => d.id === device.id).length < 1) {
-        setDiscoveredDevices([...discoveredDevices, device]);
-      }
+      console.log('discovered device', device);
+
+      setDiscoveredDevices([...discoveredDevices, device]);
     });
   };
 
-  const subscription = manager.onStateChange((state) => {
+  manager.onStateChange((state) => {
     if (state === 'PoweredOn') {
       startScanning();
-    } else {
-      subscription.remove();
+      console.log('starting scanning');
     }
   });
+
+  startScanning();
 
   const deviceCards = discoveredDevices.map((device, index) => (
     <Card paddingV-5 paddingH-5 marginV-10 activeOpacity={1} key={index}>
@@ -38,10 +39,7 @@ function ScanScreen() {
     </Card>
   ));
 
-  const cardContents =
-    discoveredDevices.length > 0 ? deviceCards : <Text>No Devices found.</Text>;
-
-  return <View padding-20>{cardContents}</View>;
+  return <View padding-20>{deviceCards}</View>;
 }
 
 export default ScanScreen;
