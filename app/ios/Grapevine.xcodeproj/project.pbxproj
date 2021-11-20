@@ -555,11 +555,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-<<<<<<< HEAD
 				DEVELOPMENT_TEAM = 5LUHC3LVD8;
-=======
-				DEVELOPMENT_TEAM = FWMGJY73A9;
->>>>>>> 3d704aa (xcode build)
 				INFOPLIST_FILE = Grapevine/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
