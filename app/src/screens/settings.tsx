@@ -9,9 +9,11 @@ import {
 } from 'react-native-ui-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleanUpSwearyString } from 'swears';
-import { StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { GRAPEVINE_MESSAGE } from 'Const';
+import { BluetoothMode } from 'bluetooth/manager'
 
-function SettingsScreen() {
+function SettingsScreen(props: { selectBluetoothMode: (mode: BluetoothMode) => void }) {
   const [messageTransmitText, setMessageText] = React.useState<string | null>(
     null
   );
@@ -22,7 +24,7 @@ function SettingsScreen() {
 
   const getMessage: () => Promise<string | null> = async () => {
     try {
-      const message = await AsyncStorage.getItem('@grapevine_message');
+      const message = await AsyncStorage.getItem(GRAPEVINE_MESSAGE);
       if (message !== null) {
         setMessageText(message);
       }
@@ -42,7 +44,7 @@ function SettingsScreen() {
         const cleanedInput = cleanUpSwearyString(messageInput);
         setMessageInput(cleanedInput);
         setMessageText(cleanedInput);
-        await AsyncStorage.setItem('@grapevine_message', cleanedInput);
+        await AsyncStorage.setItem(GRAPEVINE_MESSAGE, cleanedInput);
       }
       setIsEditingMessage(false);
       console.log('Saved message successfully');
@@ -175,11 +177,27 @@ function SettingsScreen() {
   );
 
   return (
-    <View padding-20>
+    <ScrollView padding-20>
       <Card padding-20>
         {editMessageCardHeader}
         {editMessageCardContents}
         {editMessageCardHelpText}
+      </Card>
+      <Card marginT-20 padding-20>
+        <Button
+            marginT-20
+            size={Button.sizes.small}
+            backgroundColor="blueviolet"
+            label="Scan"
+            onPress={() => props.selectBluetoothMode(BluetoothMode.Scan)}
+          />
+        <Button
+            marginT-20
+            size={Button.sizes.small}
+            backgroundColor="blueviolet"
+            label="Advertise"
+            onPress={() => props.selectBluetoothMode(BluetoothMode.Advertise)}
+          />
       </Card>
       <Card marginT-20 padding-20>
         {otherSettingsCardContents}
@@ -187,7 +205,7 @@ function SettingsScreen() {
       <Card marginT-20 padding-20>
         {statsCardContents}
       </Card>
-    </View>
+    </ScrollView>
   );
 }
 
