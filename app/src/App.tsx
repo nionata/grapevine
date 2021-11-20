@@ -3,12 +3,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from 'screens/home';
-import ScanScreen from 'screens/peers';
+import PeersScreen from 'screens/peers';
 import SettingsScreen from 'screens/settings';
-import BluetoothManager, { BluetoothMode } from 'bluetooth/manager'
+import BluetoothManager from 'bluetooth/manager'
 import { Message } from 'api/message'
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator()
+let bluetoothManager: BluetoothManager
 
 interface AppProps {
 }
@@ -25,8 +26,7 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   componentDidMount() {
-    const bluetoothManager = new BluetoothManager(
-      BluetoothMode.Advertise, 
+    bluetoothManager = new BluetoothManager(
       () => this.state.messages,
       (message: Message) => {
         this.setState((state) => {
@@ -36,7 +36,6 @@ class App extends React.Component<AppProps, AppState> {
         })
       }
     )
-    bluetoothManager.start()
   }
 
   render() {
@@ -63,8 +62,8 @@ class App extends React.Component<AppProps, AppState> {
           })}
         >
           <Tab.Screen name="GrapeVine" children={() => <HomeScreen messages={this.state.messages}/>} />
-          <Tab.Screen name="Peers" component={ScanScreen} />
-          <Tab.Screen name="Settings" component={SettingsScreen} />
+          <Tab.Screen name="Peers" component={PeersScreen} />
+          <Tab.Screen name="Settings" children={() => <SettingsScreen selectBluetoothMode={bluetoothManager.start} />} />
         </Tab.Navigator>
       </NavigationContainer>
     );

@@ -1,20 +1,18 @@
 import { BleManager, Device } from 'react-native-ble-plx'
-import { GRAPEVINE_SERVICE_NAME, GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from 'Const'
-import { GetMessages } from 'bluetooth'
+import { GRAPEVINE_MESSAGE, GRAPEVINE_SERVICE_NAME, GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from 'Const'
 import { Message } from 'api/message'
 import { fromByteArray } from 'base64-js'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export default class BluetoothCentral {
   manager: BleManager
   poweredOn: boolean
   peers: Set<Device>
-  getMessages: GetMessages
 
-  constructor(getMessages: GetMessages) {
+  constructor() {
     this.manager = new BleManager()
     this.poweredOn = false
     this.peers = new Set()
-    this.getMessages = getMessages
   }
 
   startScanning() {
@@ -55,24 +53,21 @@ export default class BluetoothCentral {
       }
       console.log(device.id, device.name)
 
-      const messages = this.getMessages()
-      if (messages.length == 0) {
-        console.log('No messages to transmit. Skipping device.')
-        return
-      }
-      const byteArr = Message.encode(
-        messages.pop() || Message.fromJSON({})
-      ).finish()
-
-      device.connect().then((device) => {
-        // For now we will write w/o a response. We can think more about our posture 
-        // towards guaranteed delivery later.
-        device.writeCharacteristicWithoutResponseForService(
-          GRAPEVINE_SERVICE_UUID, 
-          MESSAGE_CHARACTERISTIC_UUID,
-          fromByteArray(byteArr)
-        ).then(characteristic => {
-          console.log(characteristic)
+      AsyncStorage.getItem(GRAPEVINE_MESSAGE).then(message => {
+        console.log(`Transmitting message '${message}' to device ${device.id}`)
+        device.connect().then((device) => {
+          const byteArr = Message.encode(Message.fromJSON({
+            content: message
+          })).finish()
+          // For now we will write w/o a response. We can think more about our posture 
+          // towards guaranteed delivery later.
+          device.writeCharacteristicWithoutResponseForService(
+            GRAPEVINE_SERVICE_UUID, 
+            MESSAGE_CHARACTERISTIC_UUID,
+            fromByteArray(byteArr)
+          ).then(characteristic => {
+            console.log(characteristic)
+          })
         })
       })
 
