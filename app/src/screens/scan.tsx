@@ -16,7 +16,7 @@ function ScanScreen() {
         return;
       }
 
-      if (discoveredDevices.filter((d) => d.id === device.id).length !== 1) {
+      if (discoveredDevices.filter((d) => d.id === device.id).length < 1) {
         setDiscoveredDevices([...discoveredDevices, device]);
       }
     });
