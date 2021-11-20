@@ -61,7 +61,8 @@
     "baseUrl": "./src/",
     "paths": {
       "api/*": ["../api/*"],
-      "screens/*": ["screens/*"]
+      "bluetooth/*": ["bluetooth/*"],
+      "screens/*": ["screens/*"],
     }
   },
   "exclude": [

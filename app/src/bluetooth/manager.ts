@@ -21,10 +21,12 @@ export default class BluetoothManager {
   }
 
   async start() {
+    console.log('Starting bluetooth manager')
     if (this.mode == BluetoothMode.Scan) {
       // this.central.startScanning()
     } else if (this.mode == BluetoothMode.Advertise) {
-      this.peripheral.startAdvertising()
+      await this.peripheral.startAdvertising()
+      console.log('Advertising')
     }
   }
 }
