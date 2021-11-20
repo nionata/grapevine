@@ -5,20 +5,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from 'screens/home';
 import PeersScreen from 'screens/peers';
 import SettingsScreen from 'screens/settings';
-import BluetoothManager from 'bluetooth/manager'
+import BluetoothManager, { BluetoothMode } from 'bluetooth/manager'
 import { Message } from 'api/message'
-import { BluetoothMode } from 'bluetooth/manager';
-import { Peers, Peer } from 'bluetooth';
+import { Peer } from 'bluetooth';
+import { AppProps, AppState } from 'index';
 
 const Tab = createBottomTabNavigator()
-
-interface AppProps {
-}
-interface AppState {
-  manager: BluetoothManager
-  messages: Message[]
-  peers: Peers
-}
 
 class App extends React.Component<AppProps, AppState> {
   constructor(props: AppProps) {
