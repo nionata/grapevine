@@ -1,6 +1,6 @@
 import Manager from 'react-native-peripheral/lib/Manager'
 import { Service, Characteristic } from 'react-native-peripheral'
-import { GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from '../Const'
+import { GRAPEVINE_SERVICE_NAME, GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from '../Const'
 import { Message, Messages } from 'api/message'
 import { toByteArray, fromByteArray } from 'base64-js'
 
@@ -45,14 +45,10 @@ export default class BluetoothPeripheral {
     })
   }
 
-  async startAdvertising(): Promise<boolean> {
-    if (!this.poweredOn) {
-      return false
-    }
+  async startAdvertising(): Promise<void> {
     await this.manager.startAdvertising({
-      name: 'Grapevine Peer',
+      name: GRAPEVINE_SERVICE_NAME,
       serviceUuids: [GRAPEVINE_SERVICE_UUID],
     })
-    return true
   }
 }

@@ -8,6 +8,7 @@ module.exports = {
         root: ['./src/'],
         alias: {
           'api': './api',
+          'bluetooth': './src/bluetooth',
           'screens': './src/screens'
         },
         extensions: [
