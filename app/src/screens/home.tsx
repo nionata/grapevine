@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Card, Text } from 'react-native-ui-lib';
+import { Card, Text } from 'react-native-ui-lib';
 import { Message } from 'api/message';
+import { ScrollView } from 'react-native';
 
 function HomeScreen(props: { messages: Message[] }) {
   const messageCards = props.messages.map((message, index) => (
@@ -9,7 +10,7 @@ function HomeScreen(props: { messages: Message[] }) {
     </Card>
   ));
 
-  return <View padding-20>{messageCards}</View>;
+  return <ScrollView padding-20>{messageCards}</ScrollView>;
 }
 
 export default HomeScreen;

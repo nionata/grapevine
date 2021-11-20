@@ -1,6 +1,6 @@
 import BluetoothCentral from 'bluetooth/central'
 import BluetoothPeripheral from 'bluetooth/peripheral'
-import { GetMessages, SetMessage } from 'bluetooth'
+import { GetMessages, GetPeers, SetMessage, SetPeer } from 'bluetooth'
 
 export enum BluetoothMode {
   Scan,
@@ -15,9 +15,11 @@ export default class BluetoothManager {
   constructor(
     getMessages: GetMessages, 
     setMessage: SetMessage,
+    getPeers: GetPeers,
+    setPeer: SetPeer
   ) {
     this.mode = BluetoothMode.Advertise
-    this.central = new BluetoothCentral()
+    this.central = new BluetoothCentral(getPeers, setPeer)
     this.peripheral = new BluetoothPeripheral(getMessages, setMessage)
   }
 
@@ -29,5 +31,12 @@ export default class BluetoothManager {
     } else if (mode == BluetoothMode.Advertise) {
       await this.peripheral.startAdvertising()
     }
+  }
+
+  async destroy() {
+    this.central.manager.stopDeviceScan()
+    this.central.manager.destroy()
+    await this.peripheral.manager.stopAdvertising()
+    await this.peripheral.manager.removeAllServices()
   }
 }

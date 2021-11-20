@@ -1,47 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, Card } from 'react-native-ui-lib';
-import { BleManager, Device } from 'react-native-ble-plx';
+import React from 'react';
+import { Text, Card } from 'react-native-ui-lib';
+import { ScrollView } from 'react-native';
+import { Peers } from 'bluetooth';
 
-function PeersScreen() {
-  const [discoveredDevices, setDiscoveredDevices] = useState<Device[]>([]);
-  // const manager = new BleManager();
-
-  // const startScanning = () => {
-  //   manager.startDeviceScan(null, null, (error, device) => {
-  //     if (error) {
-  //       console.error(error);
-  //       return;
-  //     } else if (!device) {
-  //       console.error('Device not found?');
-  //       return;
-  //     }
-
-  //     if (discoveredDevices.filter((d) => d.id === device.id).length !== 1) {
-  //       setDiscoveredDevices([...discoveredDevices, device]);
-  //     }
-  //   });
-  // };
-
-  // const subscription = manager.onStateChange((state) => {
-  //   if (state === 'PoweredOn') {
-  //     startScanning();
-  //   } else {
-  //     subscription.remove();
-  //   }
-  // });
-
-  const deviceCards = discoveredDevices.map((device, index) => (
+function PeersScreen(props: { peers: Peers }) {
+  const peerValues = Object.values(props.peers)
+  peerValues.sort((a, b) => a.encounters + b.encounters)
+  const peersCards = peerValues.map((peer, index) => (
     <Card paddingV-5 paddingH-5 marginV-10 activeOpacity={1} key={index}>
-      <Text>Name: {device.name}</Text>
-      <Text>ID: {device.id}</Text>
-      <Text>manufacturerData: {device.manufacturerData}</Text>
+      <Text>Name: {peer.device.name}</Text>
+      <Text>Id: {peer.device.id}</Text>
+      <Text>Encounters: {peer.encounters}</Text>
+      <Text>Transmissions: {peer.transmissions}</Text>
     </Card>
   ));
 
-  const cardContents =
-    discoveredDevices.length > 0 ? deviceCards : <Text>No Devices found.</Text>;
-
-  return <View padding-20>{cardContents}</View>;
+  const cardContents = peerValues.length > 0 
+    ? peersCards 
+    : <Text>No Devices found.</Text>;
+  return <ScrollView padding-20>{cardContents}</ScrollView>;
 }
 
 export default PeersScreen;
