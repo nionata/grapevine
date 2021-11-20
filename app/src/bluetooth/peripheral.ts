@@ -1,11 +1,9 @@
 import Manager from 'react-native-peripheral/lib/Manager'
 import { Service, Characteristic } from 'react-native-peripheral'
-import { GRAPEVINE_SERVICE_NAME, GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from '../Const'
+import { GRAPEVINE_SERVICE_NAME, GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from 'Const'
 import { Message, Messages } from 'api/message'
 import { toByteArray, fromByteArray } from 'base64-js'
-
-export type GetMessages = () => Message[]
-export type SetMessage = (message: Message) => void
+import { GetMessages, SetMessage } from 'bluetooth'
 
 export default class BluetoothPeripheral {
   manager: Manager

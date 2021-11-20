@@ -29,7 +29,6 @@ class App extends React.Component<AppProps, AppState> {
       BluetoothMode.Advertise, 
       () => this.state.messages,
       (message: Message) => {
-        console.log(this.state.messages, message)
         this.setState((state) => {
           return {
             messages: [...state.messages, message]
