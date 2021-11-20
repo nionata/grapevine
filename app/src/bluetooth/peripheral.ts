@@ -3,7 +3,7 @@ import { Service, Characteristic } from 'react-native-peripheral'
 import { GRAPEVINE_SERVICE_NAME, GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from 'Const'
 import { Message, Messages } from 'api/message'
 import { toByteArray, fromByteArray } from 'base64-js'
-import { GetMessages, SetMessage } from 'bluetooth/index'
+import { GetMessages, SetMessage } from 'bluetooth'
 
 export default class BluetoothPeripheral {
   manager: Manager

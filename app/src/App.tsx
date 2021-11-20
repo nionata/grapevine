@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -7,13 +7,14 @@ import PeersScreen from 'screens/peers';
 import SettingsScreen from 'screens/settings';
 import BluetoothManager from 'bluetooth/manager'
 import { Message } from 'api/message'
+import { BluetoothMode } from 'bluetooth/manager';
 
 const Tab = createBottomTabNavigator()
-let bluetoothManager: BluetoothManager
 
 interface AppProps {
 }
 interface AppState {
+  manager: BluetoothManager
   messages: Message[]
 }
 
@@ -21,22 +22,32 @@ class App extends React.Component<AppProps, AppState> {
   constructor(props: AppProps) {
     super(props)
     this.state = {
-      messages: []
+      messages: [],
+      manager: new BluetoothManager(
+        () => this.state.messages,
+        (message: Message) => {
+          this.setState((state) => {
+            return {
+              messages: [...state.messages, message]
+            }
+          })
+        }
+      )
     }
   }
 
-  componentDidMount() {
-    bluetoothManager = new BluetoothManager(
-      () => this.state.messages,
-      (message: Message) => {
-        this.setState((state) => {
-          return {
-            messages: [...state.messages, message]
-          }
-        })
-      }
-    )
-  }
+  // componentDidMount() {
+  //   const bluetoothManager = new BluetoothManager(
+  //     () => this.state.messages,
+  //     (message: Message) => {
+  //       this.setState((state) => {
+  //         return {
+  //           messages: [...state.messages, message]
+  //         }
+  //       })
+  //     }
+  //   )
+  // }
 
   render() {
     return (
@@ -63,7 +74,11 @@ class App extends React.Component<AppProps, AppState> {
         >
           <Tab.Screen name="GrapeVine" children={() => <HomeScreen messages={this.state.messages}/>} />
           <Tab.Screen name="Peers" component={PeersScreen} />
-          <Tab.Screen name="Settings" children={() => <SettingsScreen selectBluetoothMode={bluetoothManager.start} />} />
+          <Tab.Screen name="Settings" children={() => <SettingsScreen selectBluetoothMode={(mode: BluetoothMode) => {
+            this.state.manager.start(mode).then(() => {
+              console.log('Manager started')
+            })
+          }} />} />
         </Tab.Navigator>
       </NavigationContainer>
     );

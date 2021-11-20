@@ -1,6 +1,11 @@
 import BluetoothCentral from 'bluetooth/central'
 import BluetoothPeripheral from 'bluetooth/peripheral'
-import { BluetoothMode, GetMessages, SetMessage } from 'bluetooth/index'
+import { GetMessages, SetMessage } from 'bluetooth'
+
+export enum BluetoothMode {
+  Scan,
+  Advertise,
+}
 
 export default class BluetoothManager {
   mode: BluetoothMode
@@ -18,10 +23,10 @@ export default class BluetoothManager {
 
   async start(mode: BluetoothMode) {
     this.mode = mode
-    console.log(`Starting bluetooth manager in ${this.mode} mode`)
-    if (this.mode == BluetoothMode.Scan) {
+    console.log(`Starting bluetooth manager in ${BluetoothMode[mode]} mode`)
+    if (mode == BluetoothMode.Scan) {
       this.central.startScanning()
-    } else if (this.mode == BluetoothMode.Advertise) {
+    } else if (mode == BluetoothMode.Advertise) {
       await this.peripheral.startAdvertising()
     }
   }

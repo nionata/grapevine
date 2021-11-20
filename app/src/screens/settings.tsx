@@ -11,9 +11,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleanUpSwearyString } from 'swears';
 import { StyleSheet } from 'react-native';
 import { GRAPEVINE_MESSAGE } from 'Const';
-import { BluetoothMode } from 'bluetooth/index'
+import { BluetoothMode } from 'bluetooth/manager'
 
-function SettingsScreen(props: { selectBluetoothMode: (mode: BluetoothMode) => {} }) {
+function SettingsScreen(props: { selectBluetoothMode: (mode: BluetoothMode) => void }) {
   const [messageTransmitText, setMessageText] = React.useState<string | null>(
     null
   );
@@ -189,7 +189,7 @@ function SettingsScreen(props: { selectBluetoothMode: (mode: BluetoothMode) => {
       <Card marginT-20 padding-20>
         {statsCardContents}
       </Card>
-      <Card padding-20>
+      <Card marginT-20 padding-20>
         <Button
             marginT-20
             size={Button.sizes.small}
