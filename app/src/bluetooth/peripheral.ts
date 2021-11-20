@@ -10,6 +10,7 @@ export type SetMessage = (message: Message) => void
 export default class BluetoothPeripheral {
   manager: Manager
   poweredOn: boolean
+  private service: Service
 
   constructor(getMessages: GetMessages, setMessage: SetMessage) {
     this.manager = new Manager()
@@ -35,20 +36,33 @@ export default class BluetoothPeripheral {
       characteristics: [messageCharacteristic]
     })
 
+    this.service = grapevineService
+  }
+
+  async startAdvertising() {
+    if (await this.manager.isAdvertising()) {
+      return
+    }
+    const advertisement = {
+      name: GRAPEVINE_SERVICE_NAME,
+      serviceUuids: [GRAPEVINE_SERVICE_UUID],
+    }
+    if (this.poweredOn) {
+      this.manager.startAdvertising(advertisement)
+      return
+    }
+    // This should only run the first time or when the bluetooth module gets turned off after being one
     this.manager.onStateChanged(state => {
       if (state === 'poweredOn') {
-        this.manager.addService(grapevineService)
         this.poweredOn = true
+        this.manager.addService(this.service).then(() => {
+          this.manager.startAdvertising(advertisement).then(() => {
+            console.log('Started advertising')
+          })
+        })
       } else {
         this.poweredOn = false
       }
-    })
-  }
-
-  async startAdvertising(): Promise<void> {
-    await this.manager.startAdvertising({
-      name: GRAPEVINE_SERVICE_NAME,
-      serviceUuids: [GRAPEVINE_SERVICE_UUID],
     })
   }
 }

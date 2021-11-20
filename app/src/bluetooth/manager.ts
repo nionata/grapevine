@@ -26,7 +26,6 @@ export default class BluetoothManager {
       // this.central.startScanning()
     } else if (this.mode == BluetoothMode.Advertise) {
       await this.peripheral.startAdvertising()
-      console.log('Advertising')
     }
   }
 }
