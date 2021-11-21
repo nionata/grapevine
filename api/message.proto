@@ -4,8 +4,6 @@ syntax = "proto3";
 message Message {
   // Plain text content
   string content = 1;
-  // The peripheral id of the device that transmitted the message
-  string peripheralId = 2;
 }
 
 // A list of grapevine messages

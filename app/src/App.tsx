@@ -5,10 +5,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from 'screens/home';
 import PeersScreen from 'screens/peers';
 import SettingsScreen from 'screens/settings';
-import BluetoothManager, { BluetoothMode } from 'bluetooth/manager'
+import BluetoothManager from 'bluetooth/manager'
 import { Message } from 'api/message'
 import { Peer } from 'bluetooth';
 import { AppProps, AppState } from 'index';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GRAPEVINE_MESSAGE } from 'Const';
 
 const Tab = createBottomTabNavigator()
 
@@ -19,6 +21,12 @@ class App extends React.Component<AppProps, AppState> {
       messages: [],
       manager: new BluetoothManager(
         () => this.state.messages,
+        async () => {
+          const message = await AsyncStorage.getItem(GRAPEVINE_MESSAGE) || ''
+          return [{
+            content: message
+          }]
+        },
         (message: Message) => {
           this.setState((state) => {
             return {
@@ -42,17 +50,14 @@ class App extends React.Component<AppProps, AppState> {
       ),
       peers: {}
     }
-  }
-
-  componentWillUnmount() {
-    this.state.manager.destroy().then(() => {
-      console.log('Bluetooth manager destroyed')
+    this.state.manager.start().then(() => {
+      console.log('Bluetooth manager started')
     })
   }
 
-  startBluetooth(mode: BluetoothMode) {
-    this.state.manager.start(mode).then(() => {
-      console.log('Bluetooth manager started')
+  componentWillUnmount() {
+    this.state.manager.stop().then(() => {
+      console.log('Bluetooth manager stopped')
     })
   }
 
@@ -89,7 +94,7 @@ class App extends React.Component<AppProps, AppState> {
           />
           <Tab.Screen 
             name="Settings" 
-            children={() => <SettingsScreen selectBluetoothMode={(mode: BluetoothMode) => this.startBluetooth(mode)} />} 
+            children={() => <SettingsScreen />} 
           />
         </Tab.Navigator>
       </NavigationContainer>

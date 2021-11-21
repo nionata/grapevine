@@ -1,15 +1,13 @@
-/* eslint-disable no-bitwise */
-import { util, configure, Writer, Reader } from 'protobufjs/minimal';
-import Long from 'long';
+/* eslint-disable */
+import { util, configure, Writer, Reader } from "protobufjs/minimal";
+import * as Long from "long";
 
-export const protobufPackage = '';
+export const protobufPackage = "";
 
 /** A grapevine message received from a peripheral */
 export interface Message {
   /** Plain text content */
   content: string;
-  /** The peripheral id of the device that transmitted the message */
-  peripheralId: string;
 }
 
 /** A list of grapevine messages */
@@ -17,15 +15,12 @@ export interface Messages {
   messages: Message[];
 }
 
-const baseMessage: object = { content: '', peripheralId: '' };
+const baseMessage: object = { content: "" };
 
 export const Message = {
   encode(message: Message, writer: Writer = Writer.create()): Writer {
-    if (message.content !== '') {
+    if (message.content !== "") {
       writer.uint32(10).string(message.content);
-    }
-    if (message.peripheralId !== '') {
-      writer.uint32(18).string(message.peripheralId);
     }
     return writer;
   },
@@ -40,9 +35,6 @@ export const Message = {
         case 1:
           message.content = reader.string();
           break;
-        case 2:
-          message.peripheralId = reader.string();
-          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -56,26 +48,19 @@ export const Message = {
     message.content =
       object.content !== undefined && object.content !== null
         ? String(object.content)
-        : '';
-    message.peripheralId =
-      object.peripheralId !== undefined && object.peripheralId !== null
-        ? String(object.peripheralId)
-        : '';
+        : "";
     return message;
   },
 
   toJSON(message: Message): unknown {
     const obj: any = {};
     message.content !== undefined && (obj.content = message.content);
-    message.peripheralId !== undefined &&
-      (obj.peripheralId = message.peripheralId);
     return obj;
   },
 
   fromPartial(object: DeepPartial<Message>): Message {
     const message = { ...baseMessage } as Message;
-    message.content = object.content ?? '';
-    message.peripheralId = object.peripheralId ?? '';
+    message.content = object.content ?? "";
     return message;
   },
 };

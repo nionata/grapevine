@@ -3,18 +3,73 @@ import { Service, Characteristic } from 'react-native-peripheral'
 import { GRAPEVINE_SERVICE_NAME, GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from 'Const'
 import { Message, Messages } from 'api/message'
 import { toByteArray, fromByteArray } from 'base64-js'
-import { GetMessages, SetMessage } from 'bluetooth'
+import { GetMessages, SetMessage, Task } from 'bluetooth'
 
-export default class BluetoothPeripheral {
-  manager: Manager
+export default class BluetoothPeripheral implements Task {
   poweredOn: boolean
+  private manager: Manager
   private service: Service
 
   constructor(getMessages: GetMessages, setMessage: SetMessage) {
-    this.manager = new Manager()
     this.poweredOn = false
+    this.manager = new Manager()
+    this.service = new Service({
+      uuid: GRAPEVINE_SERVICE_UUID,
+      characteristics: [
+        this.messageCharacteristic(getMessages, setMessage)
+      ]
+    })
+  }
 
-    const messageCharacteristic = new Characteristic({
+  /**
+   * Begins advertisement of the grapevine service @GRAPEVINE_SERVICE_UUID with 
+   * the configured characteristics
+   * @returns 
+   */
+  async run(): Promise<void> {
+    if (await this.manager.isAdvertising()) {
+      return
+    }
+    const advertisement = {
+      name: GRAPEVINE_SERVICE_NAME,
+      serviceUuids: [GRAPEVINE_SERVICE_UUID],
+    }
+    if (this.poweredOn) {
+      return await this.manager.startAdvertising(advertisement)
+    }
+    // This should only run the first time or when the bluetooth module gets turned off after being on
+    const subscription = this.manager.onStateChanged(async state => {
+      if (state === 'poweredOn') {
+        this.poweredOn = true
+        await this.manager.addService(this.service)
+        await this.manager.startAdvertising(advertisement)
+        console.log('Started advertising')
+        subscription.remove()
+      } else {
+        this.poweredOn = false
+      }
+    })
+  }
+
+  /**
+   * Stops
+   * @return
+   */
+  async stop(): Promise<void> {
+    this.poweredOn = false
+    await this.manager.stopAdvertising()
+    await this.manager.removeAllServices()
+  }
+
+  /**
+   * GATT characteristic that on read returns the device's messages and on
+   * write appends messages from a peer device.
+   * @param getMessages 
+   * @param setMessage 
+   * @returns 
+   */
+  private messageCharacteristic(getMessages: GetMessages, setMessage: SetMessage): Characteristic {
+    return new Characteristic({
       uuid: MESSAGE_CHARACTERISTIC_UUID,
       properties: ['read', 'write'],
       permissions: ['readable', 'writeable'],
@@ -25,41 +80,9 @@ export default class BluetoothPeripheral {
         return fromByteArray(byteArr)
       },
       onWriteRequest: async(value: string, offset?: number) => {
-        setMessage(Message.decode(toByteArray(value)))
-      }
-    })
-
-    const grapevineService = new Service({
-      uuid: GRAPEVINE_SERVICE_UUID,
-      characteristics: [messageCharacteristic]
-    })
-
-    this.service = grapevineService
-  }
-
-  async startAdvertising() {
-    if (await this.manager.isAdvertising()) {
-      return
-    }
-    const advertisement = {
-      name: GRAPEVINE_SERVICE_NAME,
-      serviceUuids: [GRAPEVINE_SERVICE_UUID],
-    }
-    if (this.poweredOn) {
-      this.manager.startAdvertising(advertisement)
-      return
-    }
-    // This should only run the first time or when the bluetooth module gets turned off after being one
-    this.manager.onStateChanged(state => {
-      if (state === 'poweredOn') {
-        this.poweredOn = true
-        this.manager.addService(this.service).then(() => {
-          this.manager.startAdvertising(advertisement).then(() => {
-            console.log('Started advertising')
-          })
-        })
-      } else {
-        this.poweredOn = false
+        for (let message of Messages.decode(toByteArray(value)).messages) {
+          setMessage(message)
+        }
       }
     })
   }

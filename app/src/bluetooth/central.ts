@@ -1,32 +1,38 @@
-import { BleManager } from 'react-native-ble-plx'
-import { GRAPEVINE_MESSAGE, GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from 'Const'
-import { Message } from 'api/message'
+import { BleError, BleManager, Device } from 'react-native-ble-plx'
+import { GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from 'Const'
+import { Messages } from 'api/message'
 import { fromByteArray } from 'base64-js'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { GetPeers, Peer, SetPeer } from 'bluetooth'
+import { GetMessages, GetPeers, GetTransmittableMessages, Peer, SetPeer, Task } from 'bluetooth'
 
-export default class BluetoothCentral {
-  manager: BleManager
+export default class BluetoothCentral implements Task {
   poweredOn: boolean
-  getPeers: GetPeers
-  setPeer: SetPeer
+  private manager: BleManager
+  private getPeers: GetPeers
+  private setPeer: SetPeer
+  private getTransmittableMessages: GetTransmittableMessages
 
-  constructor(getPeers: GetPeers, setPeer: SetPeer) {
-    this.manager = new BleManager()
+  constructor(getPeers: GetPeers, setPeer: SetPeer, getTransmittableMessages: GetTransmittableMessages) {
     this.poweredOn = false
+    this.manager = new BleManager()
     this.getPeers = getPeers
     this.setPeer = setPeer
+    this.getTransmittableMessages = getTransmittableMessages
   }
 
-  startScanning() {
+  /**
+   * Begins scanning for grapevine service @GRAPEVINE_SERIVCE_UUID advertisements
+   * @returns 
+   */
+  async run(): Promise<void> {
     if (this.poweredOn) {
-      this.scanAndConnect()
+      this.manager.startDeviceScan([GRAPEVINE_SERVICE_UUID], null, this.handleDeviceScan)
       return
     }
-    const subscription = this.manager.onStateChange((state) => {
+    const subscription = this.manager.onStateChange(async (state) => {
       if (state === 'PoweredOn') {
         this.poweredOn = true
-        this.scanAndConnect()
+        this.manager.startDeviceScan([GRAPEVINE_SERVICE_UUID], null, this.handleDeviceScan)
+        console.log('Started scanning')
         subscription.remove()
       } else {
         this.poweredOn = false
@@ -34,54 +40,74 @@ export default class BluetoothCentral {
     }, true)
   }
 
-  private scanAndConnect() {
-    this.manager.startDeviceScan([GRAPEVINE_SERVICE_UUID], null, (error, device) => {
+  /**
+   * Stops scanning and destroys the manager instance
+   * @returns
+   */
+  async stop(): Promise<void> {
+    this.poweredOn = false
+    this.manager.stopDeviceScan()
+    this.manager.destroy()
+  }
+
+  /**
+   * On a device scan event log the encounter and attempt to transmit messages
+   * @param error 
+   * @param scannedDevice 
+   * @returns 
+   */
+  private async handleDeviceScan(error: BleError | null, scannedDevice: Device | null) {
+    try {
       if (error) {
         console.error(error)
         return
-      } else if (!device) {
+      } else if (!scannedDevice) {
         console.error('Device not found?')
         return
       }
-
-      // Log a new encounter for an existing or new peer
-      const peer: Peer = this.getPeers()[device.id] || {
-        device,
-        encounters: 0,
-        transmissions: 0,
-      }
-      peer.encounters++
-      this.setPeer(device.id, peer)
   
-      // Retrieve the user's message and transmit it
-      AsyncStorage.getItem(GRAPEVINE_MESSAGE).then(message => {
-        console.log(`Transmitting message '${message}'`)
-        const byteArr = Message.encode(Message.fromJSON({
-          content: message
-        })).finish()
-        device.connect()
-          .then((device) => {
-            console.log('Connected to device', device.id)
-            return device.discoverAllServicesAndCharacteristics()
-          })
-          .then((device) => {
-            peer.transmissions++
-            console.log(peer)
-            this.setPeer(device.id, peer)
-            return this.manager.writeCharacteristicWithResponseForDevice(
-              device.id, 
-              GRAPEVINE_SERVICE_UUID, 
-              MESSAGE_CHARACTERISTIC_UUID,
-              fromByteArray(byteArr)
-            )
-          })
-          .then(characteristic => {
-            // console.log(characteristic)
-          })
-          .catch(err => {
-            console.log(err)
-          })
-      })
-    })
+      // Log a new encounter for an existing or new peer
+      const peers = this.getPeers()
+      let peer: Peer = peers[scannedDevice.id]
+        ? peers[scannedDevice.id]
+        : {
+          device: scannedDevice,
+          encounters: 0,
+          transmissions: 0,
+          rssi: 0,
+          mtu: 0
+        }
+      peer.encounters++
+      peer.rssi = scannedDevice.rssi
+      peer.mtu = scannedDevice.mtu
+      console.log(`Discovered device '${peer.device.id}' (${peer.encounters} / ${peer.transmissions})`)
+      this.setPeer(scannedDevice.id, peer)
+  
+      // Encode the applicable messages
+      const messages = await this.getTransmittableMessages()
+      console.log(`Transmitting messages '${messages}'`)
+      const messagesByteArr = Messages.encode(
+        Messages.fromJSON({
+          messages: messages
+        })
+      ).finish()
+  
+      // Before writing to a service characteristc, we must connect and explicitly discover 
+      // all available options.
+      const connectedDevice = await scannedDevice.connect()
+      console.log(`Connected to device '${connectedDevice.id}'`)
+      const discoveredDevice = await connectedDevice.discoverAllServicesAndCharacteristics()
+      console.log(`Discovered services ${discoveredDevice.serviceUUIDs} on device ${discoveredDevice.id}`)
+      const characterisc = await discoveredDevice.writeCharacteristicWithResponseForService(
+        GRAPEVINE_SERVICE_UUID,
+        MESSAGE_CHARACTERISTIC_UUID,
+        fromByteArray(messagesByteArr)
+      )
+      peer.transmissions++
+      console.log(`Transmitted messages to device '${discoveredDevice.id}'`)
+      this.setPeer(scannedDevice.id, peer)
+    } catch (err) {
+      console.error(err)
+    }
   }
 }
