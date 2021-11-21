@@ -9,11 +9,10 @@ import {
 } from 'react-native-ui-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cleanUpSwearyString } from 'swears';
-import { ScrollView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { GRAPEVINE_MESSAGE } from 'Const';
-import { BluetoothMode } from 'bluetooth/manager'
 
-function SettingsScreen(props: { selectBluetoothMode: (mode: BluetoothMode) => void }) {
+function SettingsScreen() {
   const [messageTransmitText, setMessageText] = React.useState<string | null>(
     null
   );
@@ -177,27 +176,11 @@ function SettingsScreen(props: { selectBluetoothMode: (mode: BluetoothMode) => v
   );
 
   return (
-    <ScrollView padding-20>
+    <View padding-20>
       <Card padding-20>
         {editMessageCardHeader}
         {editMessageCardContents}
         {editMessageCardHelpText}
-      </Card>
-      <Card marginT-20 padding-20>
-        <Button
-            marginT-20
-            size={Button.sizes.small}
-            backgroundColor="blueviolet"
-            label="Scan"
-            onPress={() => props.selectBluetoothMode(BluetoothMode.Scan)}
-          />
-        <Button
-            marginT-20
-            size={Button.sizes.small}
-            backgroundColor="blueviolet"
-            label="Advertise"
-            onPress={() => props.selectBluetoothMode(BluetoothMode.Advertise)}
-          />
       </Card>
       <Card marginT-20 padding-20>
         {otherSettingsCardContents}
@@ -205,7 +188,7 @@ function SettingsScreen(props: { selectBluetoothMode: (mode: BluetoothMode) => v
       <Card marginT-20 padding-20>
         {statsCardContents}
       </Card>
-    </ScrollView>
+    </View>
   );
 }
 
