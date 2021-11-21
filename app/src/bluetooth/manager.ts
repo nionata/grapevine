@@ -1,6 +1,6 @@
 import BluetoothCentral from 'bluetooth/central'
 import BluetoothPeripheral from 'bluetooth/peripheral'
-import { GetMessages, GetPeers, SetMessage, SetPeer } from 'bluetooth'
+import { GetMessages, GetPeers, GetTransmittableMessages, SetMessage, SetPeer } from 'bluetooth'
 
 export enum BluetoothMode {
   Scan,
@@ -8,35 +8,52 @@ export enum BluetoothMode {
 }
 
 export default class BluetoothManager {
-  mode: BluetoothMode
   central: BluetoothCentral
   peripheral: BluetoothPeripheral
+  tickler: NodeJS.Timer | undefined
 
   constructor(
-    getMessages: GetMessages, 
+    getMessages: GetMessages,
+    getTransmittableMessages: GetTransmittableMessages,
     setMessage: SetMessage,
     getPeers: GetPeers,
-    setPeer: SetPeer
+    setPeer: SetPeer,
   ) {
-    this.mode = BluetoothMode.Advertise
-    this.central = new BluetoothCentral(getPeers, setPeer)
+    this.central = new BluetoothCentral(getPeers, setPeer, getTransmittableMessages)
     this.peripheral = new BluetoothPeripheral(getMessages, setMessage)
   }
 
-  async start(mode: BluetoothMode) {
-    this.mode = mode
-    console.log(`Starting bluetooth manager in ${BluetoothMode[mode]} mode`)
-    if (mode == BluetoothMode.Scan) {
-      this.central.startScanning()
-    } else if (mode == BluetoothMode.Advertise) {
-      await this.peripheral.startAdvertising()
+  /**
+   * Schedules both the central and peripheral bluetooth tasks to run every n seconds.
+   * The device's bluetooth chip actually schedules the actual ble tasks for the radio,
+   * so we are just continuously refreshing our task in the queue.
+   * @returns
+   */
+  async start(): Promise<void> {
+    const prefix = (message: string) => `BluetoothManager.start: ${message}`
+    console.log(prefix(`Scheduling bluetooth tasks`))
+    const taskRunner = async () => {
+      try {
+        console.log(prefix('Tickler running tasks'))
+        await this.central.run()
+        await this.peripheral.run()
+      } catch (err) {
+        console.error(err)
+      }
     }
+    this.tickler = setInterval(taskRunner, 10 * 1000)
+    await taskRunner()
   }
 
-  async destroy() {
-    this.central.manager.stopDeviceScan()
-    this.central.manager.destroy()
-    await this.peripheral.manager.stopAdvertising()
-    await this.peripheral.manager.removeAllServices()
+  /**
+   * Clears the task scheduler and stops both task managers.
+   * @return
+   */
+  async stop(): Promise<void> {
+    if (this.tickler) {
+      clearInterval(this.tickler)
+    }
+    await this.central.stop()
+    await this.peripheral.stop()
   }
 }
