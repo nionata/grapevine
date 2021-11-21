@@ -49,6 +49,22 @@ document.querySelector('#grapevine-connect-btn').addEventListener('click', funct
   })
 })
 
-document.querySelector('#grapevine-connect-btn').addEventListener('click', function (event) {
+document.querySelector('#grapevine-scan-btn').addEventListener('click', function (event) {
   scanOutput.innerHTML = ''
+  navigator.bluetooth.requestLEScan({
+    filters: [{
+      services: [serviceUuid]
+    }],
+    keepRepeatedDevices: true
+  })
+  .then(() => {
+    navigator.bluetooth.addEventListener('advertisementreceived', event => {
+      console.log('Advertisement received.');
+      console.log('  Device Name: ' + event.device.name);
+      console.log('  Device ID: ' + event.device.id);
+      console.log('  RSSI: ' + event.rssi);
+      console.log('  TX Power: ' + event.txPower);
+      console.log('  UUIDs: ' + event.uuids);
+    })
+  })
 })
