@@ -1,5 +1,5 @@
 import React, { createRef, ForwardedRef } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
+import { StyleSheet, TextInput, Text } from 'react-native';
 import Modal from 'react-native-modalbox';
 import { TextField, Button, View } from 'react-native-ui-lib';
 import { cleanUpSwearyString } from 'swears';
@@ -56,7 +56,9 @@ const ComposeModal = React.forwardRef<Modal>(
             value={messageInput}
             placeholder="Share something through the grapevine..."
             onChangeText={setMessageInput}
+            maxLength={255}
           />
+          <Text style={styles.messageLength}>{messageInput.length} / 255</Text>
 
           <Button
             marginT-10
@@ -95,6 +97,12 @@ const styles = StyleSheet.create({
   messageInput: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  messageLength: {
+    color: 'lightgray',
+    textAlign: 'right',
+    marginTop: -10,
+    marginBottom: 20,
   },
 });
 
