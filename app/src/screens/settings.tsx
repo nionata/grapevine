@@ -1,14 +1,7 @@
 import React, { useEffect } from 'react';
-import {
-  View,
-  Text,
-  Card,
-  Incubator,
-  Button,
-  Switch,
-} from 'react-native-ui-lib';
+import { View, Text, Card, Button, Switch } from 'react-native-ui-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { cleanUpSwearyString } from 'swears';
+
 import { StyleSheet } from 'react-native';
 import { GRAPEVINE_MESSAGE } from 'Const';
 
@@ -18,7 +11,6 @@ function SettingsScreen() {
   );
   const [isEditingMessage, setIsEditingMessage] =
     React.useState<boolean>(false);
-  const [messageInput, setMessageInput] = React.useState<string>('');
   const [isTransmitting, setIsTransmitting] = React.useState<boolean>(true);
 
   const getMessage: () => Promise<string | null> = async () => {
@@ -33,30 +25,6 @@ function SettingsScreen() {
       console.error(e);
 
       return null;
-    }
-  };
-
-  const saveMessage: () => Promise<boolean> = async () => {
-    try {
-      if (messageInput) {
-        // Censor the message before we save it
-        const cleanedInput = cleanUpSwearyString(messageInput);
-        setMessageInput(cleanedInput);
-        setMessageText(cleanedInput);
-        await AsyncStorage.setItem(GRAPEVINE_MESSAGE, cleanedInput);
-      }
-      setIsEditingMessage(false);
-      console.log('Saved message successfully');
-      console.log(
-        'message input',
-        messageInput,
-        'isEditingMessage: ',
-        isEditingMessage
-      );
-      return true;
-    } catch (e) {
-      console.error(e);
-      return false;
     }
   };
 
@@ -115,18 +83,7 @@ function SettingsScreen() {
       </View>
     ) : (
       <View>
-        <Incubator.TextField
-          value={messageInput}
-          placeholder="Please set a message"
-          onChangeText={setMessageInput}
-        />
-        <Button
-          marginT-10
-          backgroundColor="blueviolet"
-          label="Set Message"
-          size={Button.sizes.small}
-          onPress={saveMessage}
-        />
+        <Text>Fix this up</Text>
       </View>
     );
 
