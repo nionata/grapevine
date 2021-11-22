@@ -19,15 +19,6 @@ export default class LocalStorgage implements Storage {
   }
 
   async getMessages(filter: MessageFilter = 'all'): Promise<Messages> {
-    // if (filter === 'authored') {
-    //   return {
-    //     id1: Message.fromJSON({
-    //       content: 'hi bby',
-    //       userId: this.userId,
-    //       createdAt: Date.now(),
-    //     }),
-    //   };
-    // }
     const encodedMessages = await AsyncStorage.getItem(MESSAGES_KEY);
     if (!encodedMessages) {
       return {};
@@ -50,12 +41,11 @@ export default class LocalStorgage implements Storage {
     return filteredMessages;
   }
 
-  async setMessage(
-    message: Message,
-    id: string = uuid.v4() as string
-  ): Promise<void> {
+  async setMessage(message: Message, id?: string): Promise<void> {
+    if (!id) {
+      id = uuid.v4() as string;
+    }
     let messages = await this.getMessages();
-    this.waitForUserId();
     messages[id] = message;
     await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
   }
@@ -80,7 +70,7 @@ export default class LocalStorgage implements Storage {
    */
   private async loadUserId() {
     try {
-      // await this.purgeAll();
+      await this.purgeAll();
       let userId = await AsyncStorage.getItem(USER_ID_KEY);
       if (!userId) {
         userId = uuid.v4() as string;

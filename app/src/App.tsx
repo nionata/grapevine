@@ -40,17 +40,24 @@ class App extends React.Component<AppProps, AppState> {
     this.composeRef = React.createRef();
 
     this.storage = new LocalStorgage();
-    this.storage.setMessage({
-      content: 'hey david',
-      userId: 'user2', // this.storage.getUserId(),
-      createdAt: Date.now(),
-    });
     this.bluetoothManager = new BluetoothManager(this.storage);
     this.stateTicker = setInterval(() => this.hydrateState(), 5 * 1000);
     this.hydrateState();
     this.bluetoothManager.start().then(() => {
       console.log('Bluetooth manager started');
     });
+    setTimeout(async () => {
+      await this.storage.setMessage({
+        content: 'hey _',
+        userId: this.storage.getUserId(),
+        createdAt: Date.now(),
+      });
+      await this.storage.setMessage({
+        content: 'hey david',
+        userId: 'user2', // this.storage.getUserId(),
+        createdAt: Date.now(),
+      });
+    }, 1 * 1000);
   }
 
   componentWillUnmount() {
