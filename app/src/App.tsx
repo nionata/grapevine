@@ -5,35 +5,37 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from 'screens/home';
 import PeersScreen from 'screens/peers';
 import SettingsScreen from 'screens/settings';
-import BluetoothManager from 'bluetooth/manager'
-import { Message } from 'api/message'
+import BluetoothManager from 'bluetooth/manager';
+import { Message } from 'api/message';
 import { Peer } from 'bluetooth';
 import { AppProps, AppState } from 'index';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GRAPEVINE_MESSAGE } from 'Const';
 
-const Tab = createBottomTabNavigator()
+const Tab = createBottomTabNavigator();
 
 class App extends React.Component<AppProps, AppState> {
   constructor(props: AppProps) {
-    super(props)
+    super(props);
     this.state = {
       messages: [],
       manager: new BluetoothManager(
         () => this.state.messages,
         async () => {
-          const message = await AsyncStorage.getItem(GRAPEVINE_MESSAGE) || ''
-          return [{
-            content: message
-          }]
+          const message = (await AsyncStorage.getItem(GRAPEVINE_MESSAGE)) || '';
+          return [
+            {
+              content: message,
+            },
+          ];
         },
         (message: Message) => {
           this.setState((state) => {
             return {
               ...state,
-              messages: [...state.messages, message]
-            }
-          })
+              messages: [...state.messages, message],
+            };
+          });
         },
         () => this.state.peers,
         (id: string, peer: Peer) => {
@@ -42,23 +44,23 @@ class App extends React.Component<AppProps, AppState> {
               ...state,
               peers: {
                 ...state.peers,
-                [id]: peer
-              }
-            }
-          })
+                [id]: peer,
+              },
+            };
+          });
         }
       ),
-      peers: {}
-    }
+      peers: {},
+    };
     this.state.manager.start().then(() => {
-      console.log('Bluetooth manager started')
-    })
+      console.log('Bluetooth manager started');
+    });
   }
 
   componentWillUnmount() {
     this.state.manager.stop().then(() => {
-      console.log('Bluetooth manager stopped')
-    })
+      console.log('Bluetooth manager stopped');
+    });
   }
 
   render() {
@@ -68,7 +70,7 @@ class App extends React.Component<AppProps, AppState> {
           screenOptions={({ route }) => ({
             tabBarIcon: ({ focused, color, size }) => {
               let iconName: string = '';
-  
+
               if (route.name === 'GrapeVine') {
                 iconName = focused ? 'home' : 'home-outline';
               } else if (route.name === 'Peers') {
@@ -76,7 +78,7 @@ class App extends React.Component<AppProps, AppState> {
               } else if (route.name === 'Settings') {
                 iconName = focused ? 'cog' : 'cog-outline';
               }
-  
+
               // You can return any component that you like here!
               return <Ionicons name={iconName} size={size} color={color} />;
             },
@@ -84,18 +86,15 @@ class App extends React.Component<AppProps, AppState> {
             tabBarInactiveTintColor: 'gray',
           })}
         >
-          <Tab.Screen 
-            name="GrapeVine" 
-            children={() => <HomeScreen messages={this.state.messages}/>} 
+          <Tab.Screen
+            name="GrapeVine"
+            children={() => <HomeScreen messages={this.state.messages} />}
           />
-          <Tab.Screen 
-            name="Peers" 
-            children={() => <PeersScreen peers={this.state.peers}/>} 
+          <Tab.Screen
+            name="Peers"
+            children={() => <PeersScreen peers={this.state.peers} />}
           />
-          <Tab.Screen 
-            name="Settings" 
-            children={() => <SettingsScreen />} 
-          />
+          <Tab.Screen name="Settings" children={() => <SettingsScreen />} />
         </Tab.Navigator>
       </NavigationContainer>
     );

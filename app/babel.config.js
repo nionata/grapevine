@@ -9,7 +9,7 @@ module.exports = {
         alias: {
           'api': './api',
           'bluetooth': './src/bluetooth',
-          'screens': './src/screens'
+          'screens': './src/screens',
         },
         extensions: [
           '.ios.ts',
