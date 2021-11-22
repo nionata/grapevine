@@ -1,32 +1,11 @@
 import React, { useEffect } from 'react';
-import { View, Text, Card, Button, Switch } from 'react-native-ui-lib';
+import { View, Text, Card, Switch } from 'react-native-ui-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { StyleSheet } from 'react-native';
-import { GRAPEVINE_MESSAGE } from 'Const';
 
 function SettingsScreen() {
-  const [messageTransmitText, setMessageText] = React.useState<string | null>(
-    null
-  );
-  const [isEditingMessage, setIsEditingMessage] =
-    React.useState<boolean>(false);
   const [isTransmitting, setIsTransmitting] = React.useState<boolean>(true);
-
-  const getMessage: () => Promise<string | null> = async () => {
-    try {
-      const message = await AsyncStorage.getItem(GRAPEVINE_MESSAGE);
-      if (message !== null) {
-        setMessageText(message);
-      }
-
-      return message;
-    } catch (e) {
-      console.error(e);
-
-      return null;
-    }
-  };
 
   const getIsTranmittingSetting: () => Promise<void> = async () => {
     try {
@@ -48,7 +27,6 @@ function SettingsScreen() {
     };
 
   useEffect(() => {
-    getMessage();
     getIsTranmittingSetting();
   }, []);
 
@@ -61,39 +39,6 @@ function SettingsScreen() {
       fontWeight: 'bold',
     },
   });
-
-  const editMessageCardHeader = (
-    <Text style={styles.cardHeader} marginB-10>
-      Message to Transmit
-    </Text>
-  );
-
-  const editMessageCardContents =
-    messageTransmitText !== null && !isEditingMessage ? (
-      <View>
-        <Text>{messageTransmitText}</Text>
-        <Button
-          marginT-20
-          size={Button.sizes.small}
-          backgroundColor="blueviolet"
-          label="Edit Message"
-          enableShadow
-          onPress={() => setIsEditingMessage(true)}
-        />
-      </View>
-    ) : (
-      <View>
-        <Text>Fix this up</Text>
-      </View>
-    );
-
-  const editMessageCardHelpText = (
-    <View paddingT-10>
-      <Text color={'gray'}>
-        This is the message that will be transmitted to other GrapeVineusers.
-      </Text>
-    </View>
-  );
 
   const otherSettingsCardContents = (
     <View>
@@ -134,14 +79,7 @@ function SettingsScreen() {
 
   return (
     <View padding-20>
-      <Card padding-20>
-        {editMessageCardHeader}
-        {editMessageCardContents}
-        {editMessageCardHelpText}
-      </Card>
-      <Card marginT-20 padding-20>
-        {otherSettingsCardContents}
-      </Card>
+      <Card padding-20>{otherSettingsCardContents}</Card>
       <Card marginT-20 padding-20>
         {statsCardContents}
       </Card>
