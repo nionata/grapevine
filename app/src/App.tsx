@@ -64,8 +64,11 @@ class App extends React.Component<AppProps, AppState> {
       this.setState((state) => {
         return {
           ...state,
-          messages,
-          peers,
+          messages: [...state.messages, ...messages],
+          peers: {
+            ...state.peers,
+            ...peers,
+          },
         };
       });
       console.log('State hydrated');
