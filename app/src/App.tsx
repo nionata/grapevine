@@ -48,13 +48,8 @@ class App extends React.Component<AppProps, AppState> {
     });
     setTimeout(async () => {
       await this.storage.setMessage({
-        content: 'hey _',
+        content: `hey this is ${this.storage.getUserId()}`,
         userId: this.storage.getUserId(),
-        createdAt: Date.now(),
-      });
-      await this.storage.setMessage({
-        content: 'hey david',
-        userId: 'user2', // this.storage.getUserId(),
         createdAt: Date.now(),
       });
     }, 1 * 1000);
