@@ -4,10 +4,14 @@ import * as Long from "long";
 
 export const protobufPackage = "";
 
-/** A grapevine message received from a peripheral */
+/** A grapevine message received from a peripheral. */
 export interface Message {
-  /** Plain text content */
+  /** Plain text content. */
   content: string;
+  /** UUID of the user that authored the message. */
+  userId: string;
+  /** Timestamp of when the message was created. */
+  createdAt: number;
 }
 
 /** A list of grapevine messages */
@@ -15,12 +19,18 @@ export interface Messages {
   messages: Message[];
 }
 
-const baseMessage: object = { content: "" };
+const baseMessage: object = { content: "", userId: "", createdAt: 0 };
 
 export const Message = {
   encode(message: Message, writer: Writer = Writer.create()): Writer {
     if (message.content !== "") {
       writer.uint32(10).string(message.content);
+    }
+    if (message.userId !== "") {
+      writer.uint32(18).string(message.userId);
+    }
+    if (message.createdAt !== 0) {
+      writer.uint32(24).uint32(message.createdAt);
     }
     return writer;
   },
@@ -34,6 +44,12 @@ export const Message = {
       switch (tag >>> 3) {
         case 1:
           message.content = reader.string();
+          break;
+        case 2:
+          message.userId = reader.string();
+          break;
+        case 3:
+          message.createdAt = reader.uint32();
           break;
         default:
           reader.skipType(tag & 7);
@@ -49,18 +65,30 @@ export const Message = {
       object.content !== undefined && object.content !== null
         ? String(object.content)
         : "";
+    message.userId =
+      object.userId !== undefined && object.userId !== null
+        ? String(object.userId)
+        : "";
+    message.createdAt =
+      object.createdAt !== undefined && object.createdAt !== null
+        ? Number(object.createdAt)
+        : 0;
     return message;
   },
 
   toJSON(message: Message): unknown {
     const obj: any = {};
     message.content !== undefined && (obj.content = message.content);
+    message.userId !== undefined && (obj.userId = message.userId);
+    message.createdAt !== undefined && (obj.createdAt = message.createdAt);
     return obj;
   },
 
   fromPartial(object: DeepPartial<Message>): Message {
     const message = { ...baseMessage } as Message;
     message.content = object.content ?? "";
+    message.userId = object.userId ?? "";
+    message.createdAt = object.createdAt ?? 0;
     return message;
   },
 };

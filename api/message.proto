@@ -1,9 +1,13 @@
 syntax = "proto3";
 
-// A grapevine message received from a peripheral
+// A grapevine message received from a peripheral.
 message Message {
-  // Plain text content
+  // Plain text content.
   string content = 1;
+  // UUID of the user that authored the message.
+  string userId = 2;
+  // Timestamp of when the message was created.
+  uint32 createdAt = 3;
 }
 
 // A list of grapevine messages
