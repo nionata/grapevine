@@ -4,16 +4,16 @@ import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text, TouchableOpacity } from 'react-native-ui-lib';
 import Modal from 'react-native-modalbox';
 
 // Custom
-import BluetoothManager from 'bluetooth/manager';
-import { Message } from 'api/message';
-import { Peer } from 'bluetooth';
 import { AppProps, AppState } from 'index';
-import { GRAPEVINE_MESSAGE } from 'Const';
+import BluetoothManager from 'bluetooth/manager';
+import { Storage } from 'storage';
+import LocalStorgage from 'storage/local';
+import { TEST_MESSAGES, TEST_PEERS } from 'data.test';
+import { TESTING } from 'const';
 
 // Screens
 import HomeScreen from 'screens/home';
@@ -25,47 +25,53 @@ const Tab = createBottomTabNavigator();
 
 class App extends React.Component<AppProps, AppState> {
   private composeRef: React.RefObject<Modal>;
+
+  private storage: Storage;
+  private bluetoothManager: BluetoothManager;
+  private stateTicker: NodeJS.Timer | undefined;
+
   constructor(props: AppProps) {
     super(props);
-    this.composeRef = React.createRef();
+
     this.state = {
-      messages: [],
-      manager: new BluetoothManager(
-        () => this.state.messages,
-        async () => {
-          const message = (await AsyncStorage.getItem(GRAPEVINE_MESSAGE)) || '';
-          return [
-            {
-              content: message,
-            },
-          ];
-        },
-        (message: Message) => {
-          this.setState((state) => {
-            return {
-              ...state,
-              messages: [...state.messages, message],
-            };
-          });
-        },
-        () => this.state.peers,
-        (id: string, peer: Peer) => {
-          this.setState((state) => {
-            return {
-              ...state,
-              peers: {
-                ...state.peers,
-                [id]: peer,
-              },
-            };
-          });
-        }
-      ),
-      peers: {},
+      messages: TESTING ? TEST_MESSAGES : [],
+      peers: TESTING ? TEST_PEERS : {},
     };
-    this.state.manager.start().then(() => {
+    this.composeRef = React.createRef();
+
+    this.storage = new LocalStorgage();
+    this.bluetoothManager = new BluetoothManager(this.storage);
+    this.stateTicker = setInterval(() => this.hydrateState(), 5 * 1000);
+    this.hydrateState();
+    this.bluetoothManager.start().then(() => {
       console.log('Bluetooth manager started');
     });
+  }
+
+  componentWillUnmount() {
+    this.bluetoothManager.stop().then(() => {
+      console.log('Bluetooth manager stopped');
+    });
+    if (this.stateTicker) {
+      clearInterval(this.stateTicker);
+    }
+  }
+
+  async hydrateState() {
+    try {
+      const messages = await this.storage.getMessages('received');
+      const peers = await this.storage.getPeers();
+      this.setState((state) => {
+        return {
+          ...state,
+          messages,
+          peers,
+        };
+      });
+      console.log('State hydrated');
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   onClose() {
@@ -78,12 +84,6 @@ class App extends React.Component<AppProps, AppState> {
 
   onClosingState(state: boolean) {
     console.log('the open/close of the swipeToClose just changed', state);
-  }
-
-  componentWillUnmount() {
-    this.state.manager.stop().then(() => {
-      console.log('Bluetooth manager stopped');
-    });
   }
 
   render() {

@@ -5,21 +5,24 @@ import {
   GRAPEVINE_SERVICE_UUID,
   MESSAGE_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
-import { Message, Messages } from 'api/message';
+import { Messages } from 'api/message';
 import { toByteArray, fromByteArray } from 'base64-js';
-import { GetMessages, SetMessage, Task } from 'bluetooth';
+import { Task } from 'bluetooth';
+import { Storage } from 'storage';
 
 export default class BluetoothPeripheral implements Task {
   poweredOn: boolean;
   private manager: Manager;
+  private storage: Storage;
   private service: Service;
 
-  constructor(getMessages: GetMessages, setMessage: SetMessage) {
+  constructor(storage: Storage) {
     this.poweredOn = false;
     this.manager = new Manager();
+    this.storage = storage;
     this.service = new Service({
       uuid: GRAPEVINE_SERVICE_UUID,
-      characteristics: [this.messageCharacteristic(getMessages, setMessage)],
+      characteristics: [this.messageCharacteristic()],
     });
   }
 
@@ -75,23 +78,22 @@ export default class BluetoothPeripheral implements Task {
    * @param setMessage
    * @returns
    */
-  private messageCharacteristic(
-    getMessages: GetMessages,
-    setMessage: SetMessage
-  ): Characteristic {
+  private messageCharacteristic(): Characteristic {
     return new Characteristic({
       uuid: MESSAGE_CHARACTERISTIC_UUID,
       properties: ['read', 'write'],
       permissions: ['readable', 'writeable'],
       onReadRequest: async (offset?: number) => {
+        console.log(`Read offset ${offset}`);
         const byteArr = Messages.encode(
-          Messages.fromJSON({ messages: getMessages() })
+          Messages.fromJSON({ messages: await this.storage.getMessages('all') })
         ).finish();
         return fromByteArray(byteArr);
       },
       onWriteRequest: async (value: string, offset?: number) => {
+        console.log(`Write offset ${offset}`);
         for (let message of Messages.decode(toByteArray(value)).messages) {
-          setMessage(message);
+          await this.storage.setMessage(message);
         }
       },
     });
