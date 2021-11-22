@@ -1,12 +1,6 @@
 import BluetoothCentral from 'bluetooth/central';
 import BluetoothPeripheral from 'bluetooth/peripheral';
-import {
-  GetMessages,
-  GetPeers,
-  GetTransmittableMessages,
-  SetMessage,
-  SetPeer,
-} from 'bluetooth';
+import { Storage } from 'storage';
 
 export enum BluetoothMode {
   Scan,
@@ -18,19 +12,9 @@ export default class BluetoothManager {
   peripheral: BluetoothPeripheral;
   tickler: NodeJS.Timer | undefined;
 
-  constructor(
-    getMessages: GetMessages,
-    getTransmittableMessages: GetTransmittableMessages,
-    setMessage: SetMessage,
-    getPeers: GetPeers,
-    setPeer: SetPeer
-  ) {
-    this.central = new BluetoothCentral(
-      getPeers,
-      setPeer,
-      getTransmittableMessages
-    );
-    this.peripheral = new BluetoothPeripheral(getMessages, setMessage);
+  constructor(storage: Storage) {
+    this.central = new BluetoothCentral(storage);
+    this.peripheral = new BluetoothPeripheral(storage);
   }
 
   /**

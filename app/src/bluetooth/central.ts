@@ -5,31 +5,18 @@ import {
 } from 'bluetooth/const';
 import { Messages } from 'api/message';
 import { fromByteArray } from 'base64-js';
-import {
-  GetPeers,
-  GetTransmittableMessages,
-  Peer,
-  SetPeer,
-  Task,
-} from 'bluetooth';
+import { Peer, Task } from 'bluetooth';
+import { Storage } from 'storage';
 
 export default class BluetoothCentral implements Task {
   poweredOn: boolean;
   private manager: BleManager;
-  private getPeers: GetPeers;
-  private setPeer: SetPeer;
-  private getTransmittableMessages: GetTransmittableMessages;
+  private storage: Storage;
 
-  constructor(
-    getPeers: GetPeers,
-    setPeer: SetPeer,
-    getTransmittableMessages: GetTransmittableMessages
-  ) {
+  constructor(storage: Storage) {
     this.poweredOn = false;
     this.manager = new BleManager();
-    this.getPeers = getPeers;
-    this.setPeer = setPeer;
-    this.getTransmittableMessages = getTransmittableMessages;
+    this.storage = storage;
   }
 
   /**
@@ -87,7 +74,7 @@ export default class BluetoothCentral implements Task {
       }
 
       // Log a new encounter for an existing or new peer
-      const peers = this.getPeers();
+      const peers = await this.storage.getPeers();
       let peer: Peer = peers[scannedDevice.id]
         ? peers[scannedDevice.id]
         : {
@@ -103,10 +90,10 @@ export default class BluetoothCentral implements Task {
       console.log(
         `Discovered device '${peer.device.id}' (${peer.encounters} / ${peer.transmissions})`
       );
-      this.setPeer(scannedDevice.id, peer);
+      await this.storage.setPeer(scannedDevice.id, peer);
 
       // Encode the applicable messages
-      const messages = await this.getTransmittableMessages();
+      const messages = await this.storage.getMessages('authored');
       console.log(`Transmitting messages '${messages}'`);
       const messagesByteArr = Messages.encode(
         Messages.fromJSON({
@@ -123,15 +110,14 @@ export default class BluetoothCentral implements Task {
       console.log(
         `Discovered services ${discoveredDevice.serviceUUIDs} on device ${discoveredDevice.id}`
       );
-      const characterisc =
-        await discoveredDevice.writeCharacteristicWithResponseForService(
-          GRAPEVINE_SERVICE_UUID,
-          MESSAGE_CHARACTERISTIC_UUID,
-          fromByteArray(messagesByteArr)
-        );
+      await discoveredDevice.writeCharacteristicWithResponseForService(
+        GRAPEVINE_SERVICE_UUID,
+        MESSAGE_CHARACTERISTIC_UUID,
+        fromByteArray(messagesByteArr)
+      );
       peer.transmissions++;
       console.log(`Transmitted messages to device '${discoveredDevice.id}'`);
-      this.setPeer(scannedDevice.id, peer);
+      await this.storage.setPeer(scannedDevice.id, peer);
     } catch (err) {
       console.error(err);
     }
