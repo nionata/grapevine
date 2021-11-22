@@ -1,5 +1,8 @@
 import { BleError, BleManager, Device } from 'react-native-ble-plx';
-import { GRAPEVINE_SERVICE_UUID, MESSAGE_CHARACTERISTIC_UUID } from 'Const';
+import {
+  GRAPEVINE_SERVICE_UUID,
+  MESSAGE_CHARACTERISTIC_UUID,
+} from 'bluetooth/const';
 import { Messages } from 'api/message';
 import { fromByteArray } from 'base64-js';
 import {
