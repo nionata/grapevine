@@ -84,20 +84,29 @@ export default class BluetoothPeripheral implements Task {
       properties: ['read', 'write'],
       permissions: ['readable', 'writeable'],
       onReadRequest: async (offset?: number) => {
-        console.log(`Read offset ${offset}`);
-        const byteArr = MessagesWrapper.encode(
-          MessagesWrapper.fromJSON({
-            content: await this.storage.getMessages('all'),
-          })
-        ).finish();
-        return fromByteArray(byteArr);
+        try {
+          console.log(`Read offset ${offset}`);
+          const byteArr = MessagesWrapper.encode(
+            MessagesWrapper.fromJSON({
+              content: await this.storage.getMessages('all'),
+            })
+          ).finish();
+          return fromByteArray(byteArr);
+        } catch (err) {
+          console.error(err);
+          return '';
+        }
       },
       onWriteRequest: async (value: string, offset?: number) => {
-        console.log(`Write offset ${offset}`);
-        for (let [id, message] of Object.entries(
-          MessagesWrapper.decode(toByteArray(value)).content
-        )) {
-          await this.storage.setMessage(message, id);
+        try {
+          console.log(`Write offset ${offset}`);
+          for (let [id, message] of Object.entries(
+            MessagesWrapper.decode(toByteArray(value)).content
+          )) {
+            await this.storage.setMessage(message, id);
+          }
+        } catch (err) {
+          console.error(err);
         }
       },
     });
