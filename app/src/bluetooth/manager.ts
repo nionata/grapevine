@@ -1,6 +1,12 @@
-import BluetoothCentral from 'bluetooth/central'
-import BluetoothPeripheral from 'bluetooth/peripheral'
-import { GetMessages, GetPeers, GetTransmittableMessages, SetMessage, SetPeer } from 'bluetooth'
+import BluetoothCentral from 'bluetooth/central';
+import BluetoothPeripheral from 'bluetooth/peripheral';
+import {
+  GetMessages,
+  GetPeers,
+  GetTransmittableMessages,
+  SetMessage,
+  SetPeer,
+} from 'bluetooth';
 
 export enum BluetoothMode {
   Scan,
@@ -8,19 +14,23 @@ export enum BluetoothMode {
 }
 
 export default class BluetoothManager {
-  central: BluetoothCentral
-  peripheral: BluetoothPeripheral
-  tickler: NodeJS.Timer | undefined
+  central: BluetoothCentral;
+  peripheral: BluetoothPeripheral;
+  tickler: NodeJS.Timer | undefined;
 
   constructor(
     getMessages: GetMessages,
     getTransmittableMessages: GetTransmittableMessages,
     setMessage: SetMessage,
     getPeers: GetPeers,
-    setPeer: SetPeer,
+    setPeer: SetPeer
   ) {
-    this.central = new BluetoothCentral(getPeers, setPeer, getTransmittableMessages)
-    this.peripheral = new BluetoothPeripheral(getMessages, setMessage)
+    this.central = new BluetoothCentral(
+      getPeers,
+      setPeer,
+      getTransmittableMessages
+    );
+    this.peripheral = new BluetoothPeripheral(getMessages, setMessage);
   }
 
   /**
@@ -30,19 +40,19 @@ export default class BluetoothManager {
    * @returns
    */
   async start(): Promise<void> {
-    const prefix = (message: string) => `BluetoothManager.start: ${message}`
-    console.log(prefix(`Scheduling bluetooth tasks`))
+    const prefix = (message: string) => `BluetoothManager.start: ${message}`;
+    console.log(prefix('Scheduling bluetooth tasks'));
     const taskRunner = async () => {
       try {
-        console.log(prefix('Tickler running tasks'))
-        await this.central.run()
-        await this.peripheral.run()
+        console.log(prefix('Tickler running tasks'));
+        await this.central.run();
+        await this.peripheral.run();
       } catch (err) {
-        console.error(err)
+        console.error(err);
       }
-    }
-    this.tickler = setInterval(taskRunner, 10 * 1000)
-    await taskRunner()
+    };
+    this.tickler = setInterval(taskRunner, 10 * 1000);
+    await taskRunner();
   }
 
   /**
@@ -51,9 +61,9 @@ export default class BluetoothManager {
    */
   async stop(): Promise<void> {
     if (this.tickler) {
-      clearInterval(this.tickler)
+      clearInterval(this.tickler);
     }
-    await this.central.stop()
-    await this.peripheral.stop()
+    await this.central.stop();
+    await this.peripheral.stop();
   }
 }

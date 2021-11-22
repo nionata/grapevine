@@ -4,8 +4,8 @@ import { ScrollView } from 'react-native';
 import { Peers } from 'bluetooth';
 
 function PeersScreen(props: { peers: Peers }) {
-  const peerValues = Object.values(props.peers)
-  peerValues.sort((a, b) => a.encounters + b.encounters)
+  const peerValues = Object.values(props.peers);
+  peerValues.sort((a, b) => a.encounters + b.encounters);
   const peersCards = peerValues.map((peer, index) => (
     <Card paddingV-5 paddingH-5 marginV-10 activeOpacity={1} key={index}>
       <Text>Name: {peer.device.name}</Text>
@@ -15,9 +15,8 @@ function PeersScreen(props: { peers: Peers }) {
     </Card>
   ));
 
-  const cardContents = peerValues.length > 0 
-    ? peersCards 
-    : <Text>No Devices found.</Text>;
+  const cardContents =
+    peerValues.length > 0 ? peersCards : <Text>No Devices found.</Text>;
   return <ScrollView padding-20>{cardContents}</ScrollView>;
 }
 
