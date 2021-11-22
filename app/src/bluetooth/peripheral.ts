@@ -4,7 +4,7 @@ import {
   GRAPEVINE_SERVICE_NAME,
   GRAPEVINE_SERVICE_UUID,
   MESSAGE_CHARACTERISTIC_UUID,
-} from 'Const';
+} from 'bluetooth/const';
 import { Message, Messages } from 'api/message';
 import { toByteArray, fromByteArray } from 'base64-js';
 import { GetMessages, SetMessage, Task } from 'bluetooth';
