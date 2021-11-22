@@ -1,12 +1,14 @@
 import React from 'react';
 import { Card, Text } from 'react-native-ui-lib';
-import { Message } from 'api/message';
 import { ScrollView } from 'react-native';
+import { Messages } from 'storage';
 
-function HomeScreen(props: { messages: Message[] }) {
-  const messageCards = props.messages.map((message, index) => (
+function HomeScreen(props: { messages: Messages }) {
+  const messageCards = Object.values(props.messages).map((message, index) => (
     <Card paddingV-5 paddingH-5 marginV-10 activeOpacity={1} key={index}>
       <Text>{message.content}</Text>
+      <Text>From {message.userId}</Text>
+      <Text>{new Date(message.createdAt).toISOString()}</Text>
     </Card>
   ));
 

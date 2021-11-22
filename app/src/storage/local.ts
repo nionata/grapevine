@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Message, Messages } from 'api/message';
-import { fromByteArray, toByteArray } from 'base64-js';
+import { Message } from 'api/message';
 import { Peer, Peers } from 'bluetooth';
-import { MessageFilter, Storage } from 'storage';
+import { MessageFilter, Messages, Storage } from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
 import uuid from 'react-native-uuid';
 
@@ -14,35 +13,51 @@ export default class LocalStorgage implements Storage {
     this.loadUserId();
   }
 
-  async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
+  getUserId(): string {
+    this.waitForUserId();
+    return this.userId;
+  }
+
+  async getMessages(filter: MessageFilter = 'all'): Promise<Messages> {
+    // if (filter === 'authored') {
+    //   return {
+    //     id1: Message.fromJSON({
+    //       content: 'hi bby',
+    //       userId: this.userId,
+    //       createdAt: Date.now(),
+    //     }),
+    //   };
+    // }
     const encodedMessages = await AsyncStorage.getItem(MESSAGES_KEY);
     if (!encodedMessages) {
-      return [];
+      return {};
     }
-    const messages = Messages.decode(toByteArray(encodedMessages)).messages;
+    const messages: Messages = JSON.parse(encodedMessages);
     if (filter === 'all') {
       return messages;
     }
+    let filteredMessages: Messages = {};
     this.waitForUserId();
-    return messages.filter((message) =>
-      filter === 'authored'
-        ? message.userId === this.userId
-        : message.userId !== this.userId
-    );
+    for (const [key, message] of Object.entries(messages)) {
+      const isMatch =
+        filter === 'authored'
+          ? message.userId === this.userId
+          : message.userId !== this.userId;
+      if (isMatch) {
+        filteredMessages[key] = message;
+      }
+    }
+    return filteredMessages;
   }
 
-  async setMessage(message: Message): Promise<void> {
-    this.waitForUserId();
-    message.userId = this.userId;
-    message.createdAt = Date.now();
+  async setMessage(
+    message: Message,
+    id: string = uuid.v4() as string
+  ): Promise<void> {
     let messages = await this.getMessages();
-    messages.push(message);
-    const messagesByteArr = Messages.encode(
-      Messages.fromJSON({
-        messages,
-      })
-    ).finish();
-    await AsyncStorage.setItem(MESSAGES_KEY, fromByteArray(messagesByteArr));
+    this.waitForUserId();
+    messages[id] = message;
+    await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
   }
 
   async getPeers(): Promise<Peers> {
@@ -65,6 +80,7 @@ export default class LocalStorgage implements Storage {
    */
   private async loadUserId() {
     try {
+      // await this.purgeAll();
       let userId = await AsyncStorage.getItem(USER_ID_KEY);
       if (!userId) {
         userId = uuid.v4() as string;

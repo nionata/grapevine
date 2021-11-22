@@ -34,12 +34,17 @@ class App extends React.Component<AppProps, AppState> {
     super(props);
 
     this.state = {
-      messages: TESTING ? TEST_MESSAGES : [],
+      messages: TESTING ? TEST_MESSAGES : {},
       peers: TESTING ? TEST_PEERS : {},
     };
     this.composeRef = React.createRef();
 
     this.storage = new LocalStorgage();
+    this.storage.setMessage({
+      content: 'hey david',
+      userId: 'user2', // this.storage.getUserId(),
+      createdAt: Date.now(),
+    });
     this.bluetoothManager = new BluetoothManager(this.storage);
     this.stateTicker = setInterval(() => this.hydrateState(), 5 * 1000);
     this.hydrateState();
@@ -64,7 +69,10 @@ class App extends React.Component<AppProps, AppState> {
       this.setState((state) => {
         return {
           ...state,
-          messages: [...state.messages, ...messages],
+          messages: {
+            ...state.messages,
+            ...messages,
+          },
           peers: {
             ...state.peers,
             ...peers,

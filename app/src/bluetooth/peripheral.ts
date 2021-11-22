@@ -5,10 +5,10 @@ import {
   GRAPEVINE_SERVICE_UUID,
   MESSAGE_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
-import { Messages } from 'api/message';
 import { toByteArray, fromByteArray } from 'base64-js';
 import { Task } from 'bluetooth';
 import { Storage } from 'storage';
+import { MessagesWrapper } from 'api/message';
 
 export default class BluetoothPeripheral implements Task {
   poweredOn: boolean;
@@ -85,15 +85,19 @@ export default class BluetoothPeripheral implements Task {
       permissions: ['readable', 'writeable'],
       onReadRequest: async (offset?: number) => {
         console.log(`Read offset ${offset}`);
-        const byteArr = Messages.encode(
-          Messages.fromJSON({ messages: await this.storage.getMessages('all') })
+        const byteArr = MessagesWrapper.encode(
+          MessagesWrapper.fromJSON({
+            content: await this.storage.getMessages('all'),
+          })
         ).finish();
         return fromByteArray(byteArr);
       },
       onWriteRequest: async (value: string, offset?: number) => {
         console.log(`Write offset ${offset}`);
-        for (let message of Messages.decode(toByteArray(value)).messages) {
-          await this.storage.setMessage(message);
+        for (let [id, message] of Object.entries(
+          MessagesWrapper.decode(toByteArray(value)).content
+        )) {
+          await this.storage.setMessage(message, id);
         }
       },
     });

@@ -10,7 +10,8 @@ message Message {
   uint32 createdAt = 3;
 }
 
-// A list of grapevine messages
-message Messages {
-  repeated Message messages = 1;
+// A wrapper of grapevine messages
+message MessagesWrapper {
+  // Key value pair of messages
+  map<string, Message> content = 1;
 }

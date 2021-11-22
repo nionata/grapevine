@@ -14,9 +14,15 @@ export interface Message {
   createdAt: number;
 }
 
-/** A list of grapevine messages */
-export interface Messages {
-  messages: Message[];
+/** A wrapper of grapevine messages */
+export interface MessagesWrapper {
+  /** Key value pair of messages */
+  content: { [key: string]: Message };
+}
+
+export interface MessagesWrapper_ContentEntry {
+  key: string;
+  value: Message | undefined;
 }
 
 const baseMessage: object = { content: "", userId: "", createdAt: 0 };
@@ -93,26 +99,35 @@ export const Message = {
   },
 };
 
-const baseMessages: object = {};
+const baseMessagesWrapper: object = {};
 
-export const Messages = {
-  encode(message: Messages, writer: Writer = Writer.create()): Writer {
-    for (const v of message.messages) {
-      Message.encode(v!, writer.uint32(10).fork()).ldelim();
-    }
+export const MessagesWrapper = {
+  encode(message: MessagesWrapper, writer: Writer = Writer.create()): Writer {
+    Object.entries(message.content).forEach(([key, value]) => {
+      MessagesWrapper_ContentEntry.encode(
+        { key: key as any, value },
+        writer.uint32(10).fork()
+      ).ldelim();
+    });
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): Messages {
+  decode(input: Reader | Uint8Array, length?: number): MessagesWrapper {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseMessages } as Messages;
-    message.messages = [];
+    const message = { ...baseMessagesWrapper } as MessagesWrapper;
+    message.content = {};
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.messages.push(Message.decode(reader, reader.uint32()));
+          const entry1 = MessagesWrapper_ContentEntry.decode(
+            reader,
+            reader.uint32()
+          );
+          if (entry1.value !== undefined) {
+            message.content[entry1.key] = entry1.value;
+          }
           break;
         default:
           reader.skipType(tag & 7);
@@ -122,31 +137,116 @@ export const Messages = {
     return message;
   },
 
-  fromJSON(object: any): Messages {
-    const message = { ...baseMessages } as Messages;
-    message.messages = (object.messages ?? []).map((e: any) =>
-      Message.fromJSON(e)
-    );
+  fromJSON(object: any): MessagesWrapper {
+    const message = { ...baseMessagesWrapper } as MessagesWrapper;
+    message.content = {};
+    if (object.content !== undefined && object.content !== null) {
+      Object.entries(object.content).forEach(([key, value]) => {
+        message.content[key] = Message.fromJSON(value);
+      });
+    }
     return message;
   },
 
-  toJSON(message: Messages): unknown {
+  toJSON(message: MessagesWrapper): unknown {
     const obj: any = {};
-    if (message.messages) {
-      obj.messages = message.messages.map((e) =>
-        e ? Message.toJSON(e) : undefined
-      );
-    } else {
-      obj.messages = [];
+    obj.content = {};
+    if (message.content) {
+      Object.entries(message.content).forEach(([k, v]) => {
+        obj.content[k] = Message.toJSON(v);
+      });
     }
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Messages>): Messages {
-    const message = { ...baseMessages } as Messages;
-    message.messages = (object.messages ?? []).map((e) =>
-      Message.fromPartial(e)
-    );
+  fromPartial(object: DeepPartial<MessagesWrapper>): MessagesWrapper {
+    const message = { ...baseMessagesWrapper } as MessagesWrapper;
+    message.content = {};
+    if (object.content !== undefined && object.content !== null) {
+      Object.entries(object.content).forEach(([key, value]) => {
+        if (value !== undefined) {
+          message.content[key] = Message.fromPartial(value);
+        }
+      });
+    }
+    return message;
+  },
+};
+
+const baseMessagesWrapper_ContentEntry: object = { key: "" };
+
+export const MessagesWrapper_ContentEntry = {
+  encode(
+    message: MessagesWrapper_ContentEntry,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== undefined) {
+      Message.encode(message.value, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): MessagesWrapper_ContentEntry {
+    const reader = input instanceof Reader ? input : new Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseMessagesWrapper_ContentEntry,
+    } as MessagesWrapper_ContentEntry;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.key = reader.string();
+          break;
+        case 2:
+          message.value = Message.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MessagesWrapper_ContentEntry {
+    const message = {
+      ...baseMessagesWrapper_ContentEntry,
+    } as MessagesWrapper_ContentEntry;
+    message.key =
+      object.key !== undefined && object.key !== null ? String(object.key) : "";
+    message.value =
+      object.value !== undefined && object.value !== null
+        ? Message.fromJSON(object.value)
+        : undefined;
+    return message;
+  },
+
+  toJSON(message: MessagesWrapper_ContentEntry): unknown {
+    const obj: any = {};
+    message.key !== undefined && (obj.key = message.key);
+    message.value !== undefined &&
+      (obj.value = message.value ? Message.toJSON(message.value) : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<MessagesWrapper_ContentEntry>
+  ): MessagesWrapper_ContentEntry {
+    const message = {
+      ...baseMessagesWrapper_ContentEntry,
+    } as MessagesWrapper_ContentEntry;
+    message.key = object.key ?? "";
+    message.value =
+      object.value !== undefined && object.value !== null
+        ? Message.fromPartial(object.value)
+        : undefined;
     return message;
   },
 };

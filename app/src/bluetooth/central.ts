@@ -3,7 +3,7 @@ import {
   GRAPEVINE_SERVICE_UUID,
   MESSAGE_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
-import { Messages } from 'api/message';
+import { MessagesWrapper } from 'api/message';
 import { fromByteArray } from 'base64-js';
 import { Peer, Task } from 'bluetooth';
 import { Storage } from 'storage';
@@ -93,11 +93,9 @@ export default class BluetoothCentral implements Task {
       await this.storage.setPeer(scannedDevice.id, peer);
 
       // Encode the applicable messages
-      const messages = await this.storage.getMessages('authored');
-      console.log(`Transmitting messages '${messages}'`);
-      const messagesByteArr = Messages.encode(
-        Messages.fromJSON({
-          messages: messages,
+      const messagesByteArr = MessagesWrapper.encode(
+        MessagesWrapper.fromJSON({
+          content: await this.storage.getMessages('authored'),
         })
       ).finish();
 

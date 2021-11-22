@@ -2,17 +2,23 @@ import { Message } from 'api/message';
 import { Peers } from 'bluetooth';
 import { Device } from 'react-native-ble-plx';
 
-export const TEST_MESSAGES = [
-  Message.fromJSON({
+export const TEST_MESSAGES = {
+  id1: Message.fromJSON({
     content: "Yo paul, what's good?",
+    userId: 'user1',
+    createdAt: Date.now(),
   }),
-  Message.fromJSON({
+  id2: Message.fromJSON({
     content: 'I am sending this message via Grapevine 🥸',
+    userId: 'user2',
+    createdAt: Date.now(),
   }),
-  Message.fromJSON({
+  id3: Message.fromJSON({
     content: 'Adam is a silly boy',
+    userId: 'user3',
+    createdAt: Date.now(),
   }),
-];
+};
 
 export const TEST_PEERS: Peers = {
   id1: {

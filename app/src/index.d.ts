@@ -1,9 +1,9 @@
-import { Message } from 'api/message';
 import { Peers } from 'bluetooth';
+import { Messages } from 'storage';
 
 interface AppProps {}
 
 interface AppState {
-  messages: Message[];
+  messages: Messages;
   peers: Peers;
 }
