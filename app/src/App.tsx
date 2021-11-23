@@ -11,7 +11,8 @@ import Modal from 'react-native-modalbox';
 import { AppProps, AppState } from 'index';
 import BluetoothManager from 'bluetooth/manager';
 import { Storage } from 'storage';
-import LocalStorgage from 'storage/local';
+// import LocalStorage from 'storage/local';
+import FirestoreStorage from 'storage/firestore';
 import { TEST_MESSAGES, TEST_PEERS } from 'data.test';
 import { TESTING } from 'const';
 
@@ -39,7 +40,7 @@ class App extends React.Component<AppProps, AppState> {
     };
     this.composeRef = React.createRef();
 
-    this.storage = new LocalStorgage();
+    this.storage = new FirestoreStorage();
     this.bluetoothManager = new BluetoothManager(this.storage);
     this.stateTicker = setInterval(() => this.hydrateState(), 5 * 1000);
     this.hydrateState();
@@ -64,7 +65,7 @@ class App extends React.Component<AppProps, AppState> {
       this.setState((state) => {
         return {
           ...state,
-          messages: [...state.messages, ...messages],
+          messages: messages,
           peers: {
             ...state.peers,
             ...peers,
@@ -119,12 +120,7 @@ class App extends React.Component<AppProps, AppState> {
         </TouchableOpacity>
 
         {/* Pops up modal from bottom, overriding any page to show the compose screen */}
-        <Modal
-          ref={this.composeRef}
-          style={styles.modal}
-          swipeToClose={true}
-          // onClosed={onClose}
-        >
+        <Modal ref={this.composeRef} style={styles.modal} swipeToClose={true}>
           <ComposeModal requestClose={() => this.composeRef.current?.close()} />
         </Modal>
       </NavigationContainer>
