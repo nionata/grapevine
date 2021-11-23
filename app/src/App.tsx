@@ -77,18 +77,6 @@ class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  onClose() {
-    console.log('Modal just closed');
-  }
-
-  onOpen() {
-    console.log('Modal just opened');
-  }
-
-  onClosingState(state: boolean) {
-    console.log('the open/close of the swipeToClose just changed', state);
-  }
-
   render() {
     return (
       <NavigationContainer>
