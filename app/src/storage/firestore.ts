@@ -14,6 +14,10 @@ export default class FirestoreStorage implements Storage {
     this.loadUserId();
   }
 
+  getUserId(): string {
+    return this.userId;
+  }
+
   async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
     if (filter === 'all') {
       // do something with the filter
