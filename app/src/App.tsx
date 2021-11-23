@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Text, TouchableOpacity } from 'react-native-ui-lib';
 import Modal from 'react-native-modalbox';
+import auth from '@react-native-firebase/auth';
 
 // Custom
 import { AppProps, AppState } from 'index';
@@ -37,6 +38,7 @@ class App extends React.Component<AppProps, AppState> {
     this.state = {
       messages: TESTING ? TEST_MESSAGES : [],
       peers: TESTING ? TEST_PEERS : {},
+      isInitializing: true,
     };
     this.composeRef = React.createRef();
 
@@ -44,9 +46,29 @@ class App extends React.Component<AppProps, AppState> {
     this.bluetoothManager = new BluetoothManager(this.storage);
     this.stateTicker = setInterval(() => this.hydrateState(), 5 * 1000);
     this.hydrateState();
+    this.anonSignIn();
     this.bluetoothManager.start().then(() => {
       console.log('Bluetooth manager started');
     });
+  }
+
+  anonSignIn() {
+    auth()
+      .signInAnonymously()
+      .then(() => {
+        const user = auth().currentUser;
+        console.log('User signed in anonymously');
+        console.log('user', user);
+        this.setState((state) => {
+          return {
+            ...state,
+            isInitializing: false,
+          };
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   componentWillUnmount() {

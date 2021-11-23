@@ -6,4 +6,5 @@ interface AppProps {}
 interface AppState {
   messages: Message[];
   peers: Peers;
+  isInitializing: boolean;
 }
