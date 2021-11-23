@@ -45,15 +45,15 @@ func Connect(targetDevice string) {
 	if len(services) != 1 {
 		panic("could not discover grapevine service")
 	}
-	characteristics, err := services[0].DiscoverCharacteristics([]bluetooth.UUID{getUUID(MessageCharacteristicUuid)})
+	characteristics, err := services[0].DiscoverCharacteristics([]bluetooth.UUID{getUUID(UserIdCharacteristicUuid)})
 	util.Must("discover characteristics", err)
 	if len(characteristics) != 1 {
 		panic("could not discover message characteristic")
 	}
 	var data []byte
-	n, err := characteristics[0].Read(data)
+	_, err = characteristics[0].Read(data)
 	util.Must("read characteristic", err)
-	println(n, string(data))
+	println(string(data))
 }
 
 func initCentral() {

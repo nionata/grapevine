@@ -31,7 +31,8 @@
     "react-native-uuid": "^2.0.1",
     "react-native-vector-icons": "^8.1.0",
     "swears": "^0.1.6",
-    "ts-proto": "^1.87.0"
+    "ts-proto": "^1.87.0",
+    "web-encoding": "^1.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

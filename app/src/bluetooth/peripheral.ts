@@ -1,14 +1,15 @@
 import Manager from 'react-native-peripheral/lib/Manager';
 import { Service, Characteristic } from 'react-native-peripheral';
 import {
-  GRAPEVINE_SERVICE_NAME,
   GRAPEVINE_SERVICE_UUID,
   MESSAGE_CHARACTERISTIC_UUID,
+  USER_ID_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
 import { Messages } from 'api/message';
 import { toByteArray, fromByteArray } from 'base64-js';
 import { Task } from 'bluetooth';
 import { Storage } from 'storage';
+import { TextEncoder } from 'web-encoding';
 
 export default class BluetoothPeripheral implements Task {
   poweredOn: boolean;
@@ -22,13 +23,12 @@ export default class BluetoothPeripheral implements Task {
     this.storage = storage;
     this.service = new Service({
       uuid: GRAPEVINE_SERVICE_UUID,
-      characteristics: [this.messageCharacteristic()],
+      characteristics: [this.userIdCharacteristic()],
     });
   }
 
   /**
-   * Begins advertisement of the grapevine service @GRAPEVINE_SERVICE_UUID with
-   * the configured characteristics
+   * Begins advertisement of the grapevine service @GRAPEVINE_SERVICE_UUID with the configured characteristics.
    * @returns
    */
   async run(): Promise<void> {
@@ -38,7 +38,9 @@ export default class BluetoothPeripheral implements Task {
       return;
     }
     const advertisement = {
-      name: GRAPEVINE_SERVICE_NAME,
+      // As of v1, we are able to achieve a connection-less detection scheme by setting the user's id as the local name.
+      // This will be available as part of the advertisement packet, which our central manager can read after a scan.
+      name: this.encodedUserId(),
       serviceUuids: [GRAPEVINE_SERVICE_UUID],
     };
     const successMessage = prefix('Started advertising');
@@ -74,9 +76,8 @@ export default class BluetoothPeripheral implements Task {
   /**
    * GATT characteristic that on read returns the device's messages and on
    * write appends messages from a peer device.
-   * @param getMessages
-   * @param setMessage
-   * @returns
+   * @returns {Characteristic}
+   * @deprecated - As of v1, messages are no longer transmitted over bluetooth.
    */
   private messageCharacteristic(): Characteristic {
     return new Characteristic({
@@ -97,5 +98,24 @@ export default class BluetoothPeripheral implements Task {
         }
       },
     });
+  }
+
+  /**
+   * Read-only GATT characteristic that returns the device's user id.
+   * @returns {Characteristic}
+   */
+  private userIdCharacteristic(): Characteristic {
+    return new Characteristic({
+      uuid: USER_ID_CHARACTERISTIC_UUID,
+      value: this.encodedUserId(),
+      properties: ['read'],
+      permissions: ['readable'],
+    });
+  }
+
+  private encodedUserId(): string {
+    const encoder = new TextEncoder();
+    return fromByteArray(encoder.encode('dummy'));
+    // return fromByteArray(encoder.encode(this.storage.getUserId()));
   }
 }

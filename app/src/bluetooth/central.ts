@@ -1,12 +1,12 @@
 import { BleError, BleManager, Device } from 'react-native-ble-plx';
 import {
   GRAPEVINE_SERVICE_UUID,
-  MESSAGE_CHARACTERISTIC_UUID,
+  USER_ID_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
-import { Messages } from 'api/message';
-import { fromByteArray } from 'base64-js';
 import { Peer, Task } from 'bluetooth';
 import { Storage } from 'storage';
+import { TextDecoder } from 'web-encoding';
+import { toByteArray } from 'base64-js';
 
 export default class BluetoothCentral implements Task {
   poweredOn: boolean;
@@ -73,6 +73,13 @@ export default class BluetoothCentral implements Task {
         return;
       }
 
+      const textDecoder = new TextDecoder('utf-8');
+      const value = textDecoder.decode(
+        toByteArray(scannedDevice.localName as string)
+      );
+      console.log(value);
+      console.log(scannedDevice.id, scannedDevice.localName);
+
       // Log a new encounter for an existing or new peer
       const peers = await this.storage.getPeers();
       let peer: Peer = peers[scannedDevice.id]
@@ -92,15 +99,6 @@ export default class BluetoothCentral implements Task {
       );
       await this.storage.setPeer(scannedDevice.id, peer);
 
-      // Encode the applicable messages
-      const messages = await this.storage.getMessages('authored');
-      console.log(`Transmitting messages '${messages}'`);
-      const messagesByteArr = Messages.encode(
-        Messages.fromJSON({
-          messages: messages,
-        })
-      ).finish();
-
       // Before writing to a service characteristc, we must connect and explicitly discover
       // all available options.
       const connectedDevice = await scannedDevice.connect();
@@ -110,13 +108,11 @@ export default class BluetoothCentral implements Task {
       console.log(
         `Discovered services ${discoveredDevice.serviceUUIDs} on device ${discoveredDevice.id}`
       );
-      await discoveredDevice.writeCharacteristicWithResponseForService(
+      await discoveredDevice.readCharacteristicForService(
         GRAPEVINE_SERVICE_UUID,
-        MESSAGE_CHARACTERISTIC_UUID,
-        fromByteArray(messagesByteArr)
+        USER_ID_CHARACTERISTIC_UUID
       );
-      peer.transmissions++;
-      console.log(`Transmitted messages to device '${discoveredDevice.id}'`);
+      console.log(`Read userId froms device '${discoveredDevice.id}'`);
       await this.storage.setPeer(scannedDevice.id, peer);
     } catch (err) {
       console.error(err);
