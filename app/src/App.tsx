@@ -6,12 +6,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Text, TouchableOpacity } from 'react-native-ui-lib';
 import Modal from 'react-native-modalbox';
+import auth from '@react-native-firebase/auth';
 
 // Custom
 import { AppProps, AppState } from 'index';
 import BluetoothManager from 'bluetooth/manager';
 import { Storage } from 'storage';
-import LocalStorgage from 'storage/local';
+// import LocalStorage from 'storage/local';
+import FirestoreStorage from 'storage/firestore';
 import { TEST_MESSAGES, TEST_PEERS } from 'data.test';
 import { TESTING } from 'const';
 
@@ -36,16 +38,37 @@ class App extends React.Component<AppProps, AppState> {
     this.state = {
       messages: TESTING ? TEST_MESSAGES : [],
       peers: TESTING ? TEST_PEERS : {},
+      isInitializing: true,
     };
     this.composeRef = React.createRef();
 
-    this.storage = new LocalStorgage();
+    this.storage = new FirestoreStorage();
     this.bluetoothManager = new BluetoothManager(this.storage);
     this.stateTicker = setInterval(() => this.hydrateState(), 5 * 1000);
     this.hydrateState();
+    this.anonSignIn();
     this.bluetoothManager.start().then(() => {
       console.log('Bluetooth manager started');
     });
+  }
+
+  anonSignIn() {
+    auth()
+      .signInAnonymously()
+      .then(() => {
+        const user = auth().currentUser;
+        console.log('User signed in anonymously');
+        console.log('user', user);
+        this.setState((state) => {
+          return {
+            ...state,
+            isInitializing: false,
+          };
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   componentWillUnmount() {
@@ -64,7 +87,7 @@ class App extends React.Component<AppProps, AppState> {
       this.setState((state) => {
         return {
           ...state,
-          messages: [...state.messages, ...messages],
+          messages: messages,
           peers: {
             ...state.peers,
             ...peers,
@@ -74,6 +97,20 @@ class App extends React.Component<AppProps, AppState> {
       console.log('State hydrated');
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async updateMessages() {
+    try {
+      const messages = await this.storage.getMessages('received');
+      this.setState((state) => {
+        return {
+          ...state,
+          messages,
+        };
+      });
+    } catch (err) {
+      console.error('Err updating messages', err);
     }
   }
 
@@ -119,13 +156,27 @@ class App extends React.Component<AppProps, AppState> {
         </TouchableOpacity>
 
         {/* Pops up modal from bottom, overriding any page to show the compose screen */}
-        <ComposeModal ref={this.composeRef} />
+        <Modal ref={this.composeRef} style={styles.modal} swipeToClose={true}>
+          <ComposeModal
+            requestClose={() => {
+              this.composeRef?.current?.close();
+              this.updateMessages();
+            }}
+          />
+        </Modal>
       </NavigationContainer>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  modal: {
+    alignItems: 'center',
+    width: undefined,
+    height: undefined,
+    flex: 1,
+    paddingTop: 100,
+  },
   floatingButton: {
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.2)',

@@ -1,12 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Message, Messages } from 'api/message';
-import { fromByteArray, toByteArray } from 'base64-js';
+import { Message } from 'api/message';
 import { Peer, Peers } from 'bluetooth';
 import { MessageFilter, Storage } from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
 import uuid from 'react-native-uuid';
+import firestore from '@react-native-firebase/firestore';
 
-export default class LocalStorage implements Storage {
+export default class FirestoreStorage implements Storage {
   private userId: string;
 
   constructor() {
@@ -14,40 +14,42 @@ export default class LocalStorage implements Storage {
     this.loadUserId();
   }
 
-  getUserId(): string {
-    this.waitForUserId();
-    return this.userId;
-  }
-
   async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
-    const encodedMessages = await AsyncStorage.getItem(MESSAGES_KEY);
-    if (!encodedMessages) {
-      return [];
-    }
-    const messages = Messages.decode(toByteArray(encodedMessages)).messages;
     if (filter === 'all') {
-      return messages;
+      // do something with the filter
     }
-    this.waitForUserId();
-    return messages.filter((message) =>
-      filter === 'authored'
-        ? message.userId === this.userId
-        : message.userId !== this.userId
-    );
+
+    const documents = await firestore()
+      .collection<Message>('Messages')
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const messages: Message[] = [];
+    documents.forEach((documentSnapshot) => {
+      messages.push({
+        content: documentSnapshot.data().content,
+        userId: documentSnapshot.data().userId,
+        createdAt: documentSnapshot.data().createdAt,
+      });
+    });
+
+    return messages;
   }
 
   async setMessage(message: Message): Promise<void> {
     this.waitForUserId();
     message.userId = this.userId;
     message.createdAt = Date.now();
-    let messages = await this.getMessages();
-    messages.push(message);
-    const messagesByteArr = Messages.encode(
-      Messages.fromJSON({
-        messages,
+
+    firestore()
+      .collection('Messages')
+      .add(message)
+      .then(() => {
+        console.log('Message saved to firestore');
       })
-    ).finish();
-    await AsyncStorage.setItem(MESSAGES_KEY, fromByteArray(messagesByteArr));
+      .catch((err: Error) => {
+        console.error('Error adding msg to firestore', err);
+      });
   }
 
   async getPeers(): Promise<Peers> {
@@ -90,9 +92,6 @@ export default class LocalStorage implements Storage {
     while (!this.userId) {}
   }
 
-  /**
-   * NOTE: This will clear all local data. This should only be used in testing.
-   */
   private async purgeAll() {
     await AsyncStorage.multiRemove([USER_ID_KEY, PEERS_KEY, MESSAGES_KEY]);
   }
