@@ -37,7 +37,7 @@ func Connect(targetDevice string) {
 	case result := <-ch:
 		device, err = adapter.Connect(result.Address, bluetooth.ConnectionParams{})
 		util.Must("connect to device", err)
-		println("connected to ", result.Address.String())
+		println("connected to ", result.Address.String(), result.LocalName())
 	}
 
 	services, err := device.DiscoverServices([]bluetooth.UUID{grapevineServiceUUID})

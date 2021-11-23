@@ -15,16 +15,11 @@ export default class BluetoothPeripheral implements Task {
   poweredOn: boolean;
   private manager: Manager;
   private storage: Storage;
-  private service: Service;
 
   constructor(storage: Storage) {
     this.poweredOn = false;
     this.manager = new Manager();
     this.storage = storage;
-    this.service = new Service({
-      uuid: GRAPEVINE_SERVICE_UUID,
-      characteristics: [this.userIdCharacteristic()],
-    });
   }
 
   /**
@@ -53,7 +48,12 @@ export default class BluetoothPeripheral implements Task {
     const subscription = this.manager.onStateChanged(async (state) => {
       if (state === 'poweredOn') {
         this.poweredOn = true;
-        await this.manager.addService(this.service);
+        await this.manager.addService(
+          new Service({
+            uuid: GRAPEVINE_SERVICE_UUID,
+            characteristics: [this.userIdCharacteristic()],
+          })
+        );
         await this.manager.startAdvertising(advertisement);
         console.log(successMessage);
         subscription.remove();
@@ -115,7 +115,6 @@ export default class BluetoothPeripheral implements Task {
 
   private encodedUserId(): string {
     const encoder = new TextEncoder();
-    return fromByteArray(encoder.encode('dummy'));
-    // return fromByteArray(encoder.encode(this.storage.getUserId()));
+    return fromByteArray(encoder.encode(this.storage.getUserId()));
   }
 }
