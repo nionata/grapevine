@@ -1,16 +1,19 @@
 import React from 'react';
 import { Card, Text } from 'react-native-ui-lib';
 import { Message } from 'api/message';
-import { ScrollView } from 'react-native';
+import { FlatList } from 'react-native';
 
 function HomeScreen(props: { messages: Message[] }) {
-  const messageCards = props.messages.map((message, index) => (
-    <Card paddingV-5 paddingH-5 marginV-10 activeOpacity={1} key={index}>
-      <Text>{message.content}</Text>
-    </Card>
-  ));
-
-  return <ScrollView padding-20>{messageCards}</ScrollView>;
+  return (
+    <FlatList
+      data={props.messages}
+      renderItem={({ item }) => (
+        <Card paddingV-5 paddingH-5 marginH-10 marginV-10 activeOpacity={1}>
+          <Text>{item.content}</Text>
+        </Card>
+      )}
+    />
+  );
 }
 
 export default HomeScreen;
