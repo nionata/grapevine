@@ -14,6 +14,11 @@ export default class LocalStorage implements Storage {
     this.loadUserId();
   }
 
+  getUserId(): string {
+    this.waitForUserId();
+    return this.userId;
+  }
+
   async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
     const encodedMessages = await AsyncStorage.getItem(MESSAGES_KEY);
     if (!encodedMessages) {
@@ -85,6 +90,9 @@ export default class LocalStorage implements Storage {
     while (!this.userId) {}
   }
 
+  /**
+   * NOTE: This will clear all local data. This should only be used in testing.
+   */
   private async purgeAll() {
     await AsyncStorage.multiRemove([USER_ID_KEY, PEERS_KEY, MESSAGES_KEY]);
   }
