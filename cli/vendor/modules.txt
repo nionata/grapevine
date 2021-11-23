@@ -1,0 +1,51 @@
+# github.com/JuulLabs-OSS/cbgo v0.0.2
+## explicit; go 1.14
+github.com/JuulLabs-OSS/cbgo
+# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+## explicit
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
+# github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a
+## explicit; go 1.15
+github.com/alecthomas/units
+# github.com/fatih/structs v1.1.0
+## explicit
+github.com/fatih/structs
+# github.com/go-ole/go-ole v1.2.4
+## explicit; go 1.12
+github.com/go-ole/go-ole
+# github.com/godbus/dbus/v5 v5.0.3
+## explicit; go 1.12
+github.com/godbus/dbus/v5
+github.com/godbus/dbus/v5/introspect
+github.com/godbus/dbus/v5/prop
+# github.com/konsorten/go-windows-terminal-sequences v1.0.3
+## explicit
+github.com/konsorten/go-windows-terminal-sequences
+# github.com/muka/go-bluetooth v0.0.0-20210812063148-b6c83362e27d
+## explicit; go 1.14
+github.com/muka/go-bluetooth/api
+github.com/muka/go-bluetooth/api/service
+github.com/muka/go-bluetooth/bluez
+github.com/muka/go-bluetooth/bluez/profile
+github.com/muka/go-bluetooth/bluez/profile/adapter
+github.com/muka/go-bluetooth/bluez/profile/advertising
+github.com/muka/go-bluetooth/bluez/profile/agent
+github.com/muka/go-bluetooth/bluez/profile/device
+github.com/muka/go-bluetooth/bluez/profile/gatt
+github.com/muka/go-bluetooth/props
+github.com/muka/go-bluetooth/util
+# github.com/sirupsen/logrus v1.6.0
+## explicit; go 1.13
+github.com/sirupsen/logrus
+# golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
+## explicit; go 1.12
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix
+# gopkg.in/alecthomas/kingpin.v2 v2.2.6
+## explicit
+gopkg.in/alecthomas/kingpin.v2
+# tinygo.org/x/bluetooth v0.4.0
+## explicit; go 1.15
+tinygo.org/x/bluetooth
+tinygo.org/x/bluetooth/winbt
