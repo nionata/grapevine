@@ -100,6 +100,20 @@ class App extends React.Component<AppProps, AppState> {
     }
   }
 
+  async updateMessages() {
+    try {
+      const messages = await this.storage.getMessages('received');
+      this.setState((state) => {
+        return {
+          ...state,
+          messages,
+        };
+      });
+    } catch (err) {
+      console.error('Err updating messages', err);
+    }
+  }
+
   render() {
     return (
       <NavigationContainer>
@@ -143,7 +157,12 @@ class App extends React.Component<AppProps, AppState> {
 
         {/* Pops up modal from bottom, overriding any page to show the compose screen */}
         <Modal ref={this.composeRef} style={styles.modal} swipeToClose={true}>
-          <ComposeModal requestClose={() => this.composeRef.current?.close()} />
+          <ComposeModal
+            requestClose={() => {
+              this.composeRef?.current?.close();
+              this.updateMessages();
+            }}
+          />
         </Modal>
       </NavigationContainer>
     );

@@ -19,7 +19,10 @@ export default class FirestoreStorage implements Storage {
       // do something with the filter
     }
 
-    const documents = await firestore().collection<Message>('Messages').get();
+    const documents = await firestore()
+      .collection<Message>('Messages')
+      .orderBy('createdAt', 'desc')
+      .get();
 
     const messages: Message[] = [];
     documents.forEach((documentSnapshot) => {
