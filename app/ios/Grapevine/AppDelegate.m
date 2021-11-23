@@ -12,6 +12,7 @@
 #import <SKIOSNetworkPlugin/SKIOSNetworkAdapter.h>
 #import <FlipperKitReactPlugin/FlipperKitReactPlugin.h>
 #import <Firebase.h>
+#import <CodePush/CodePush.h>
 
 static void InitializeFlipper(UIApplication *application) {
   FlipperClient *client = [FlipperClient sharedClient];
@@ -59,7 +60,9 @@ static void InitializeFlipper(UIApplication *application) {
 #if DEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index" fallbackResource:nil];
 #else
-  return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+  // The bundleURL method assumes your app's JS bundle is named main.jsbundle. 
+  // https://docs.microsoft.com/en-us/appcenter/distribution/codepush/rn-get-started
+  return [CodePush URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
 }
 
