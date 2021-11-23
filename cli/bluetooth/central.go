@@ -37,7 +37,7 @@ func Connect(targetDevice string) {
 	case result := <-ch:
 		device, err = adapter.Connect(result.Address, bluetooth.ConnectionParams{})
 		util.Must("connect to device", err)
-		println("connected to ", result.Address.String())
+		println("connected to ", result.Address.String(), result.LocalName())
 	}
 
 	services, err := device.DiscoverServices([]bluetooth.UUID{grapevineServiceUUID})
@@ -45,7 +45,7 @@ func Connect(targetDevice string) {
 	if len(services) != 1 {
 		panic("could not discover grapevine service")
 	}
-	characteristics, err := services[0].DiscoverCharacteristics([]bluetooth.UUID{getUUID(MessageCharacteristicUuid)})
+	characteristics, err := services[0].DiscoverCharacteristics([]bluetooth.UUID{getUUID(UserIdCharacteristicUuid)})
 	util.Must("discover characteristics", err)
 	if len(characteristics) != 1 {
 		panic("could not discover message characteristic")

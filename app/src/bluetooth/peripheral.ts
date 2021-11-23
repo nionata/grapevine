@@ -1,34 +1,31 @@
 import Manager from 'react-native-peripheral/lib/Manager';
 import { Service, Characteristic } from 'react-native-peripheral';
 import {
-  GRAPEVINE_SERVICE_NAME,
   GRAPEVINE_SERVICE_UUID,
   MESSAGE_CHARACTERISTIC_UUID,
+  USER_ID_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
 import { Messages } from 'api/message';
-import { toByteArray, fromByteArray } from 'base64-js';
 import { Task } from 'bluetooth';
 import { Storage } from 'storage';
+import { encode } from 'bluetooth/encoding';
+import { fromByteArray, toByteArray } from 'base64-js';
 
 export default class BluetoothPeripheral implements Task {
   poweredOn: boolean;
   private manager: Manager;
   private storage: Storage;
-  private service: Service;
+  private adLocalName: string;
 
   constructor(storage: Storage) {
     this.poweredOn = false;
     this.manager = new Manager();
     this.storage = storage;
-    this.service = new Service({
-      uuid: GRAPEVINE_SERVICE_UUID,
-      characteristics: [this.messageCharacteristic()],
-    });
+    this.adLocalName = '';
   }
 
   /**
-   * Begins advertisement of the grapevine service @GRAPEVINE_SERVICE_UUID with
-   * the configured characteristics
+   * Begins advertisement of the grapevine service @GRAPEVINE_SERVICE_UUID with the configured characteristics.
    * @returns
    */
   async run(): Promise<void> {
@@ -38,7 +35,9 @@ export default class BluetoothPeripheral implements Task {
       return;
     }
     const advertisement = {
-      name: GRAPEVINE_SERVICE_NAME,
+      // As of v1, we are able to achieve a connection-less detection scheme by setting the user's id as the local name.
+      // This will be available as part of the advertisement packet, which our central manager can read after a scan.
+      name: this.getOrSetAdLocalName(),
       serviceUuids: [GRAPEVINE_SERVICE_UUID],
     };
     const successMessage = prefix('Started advertising');
@@ -51,7 +50,12 @@ export default class BluetoothPeripheral implements Task {
     const subscription = this.manager.onStateChanged(async (state) => {
       if (state === 'poweredOn') {
         this.poweredOn = true;
-        await this.manager.addService(this.service);
+        await this.manager.addService(
+          new Service({
+            uuid: GRAPEVINE_SERVICE_UUID,
+            characteristics: [this.userIdCharacteristic()],
+          })
+        );
         await this.manager.startAdvertising(advertisement);
         console.log(successMessage);
         subscription.remove();
@@ -74,9 +78,8 @@ export default class BluetoothPeripheral implements Task {
   /**
    * GATT characteristic that on read returns the device's messages and on
    * write appends messages from a peer device.
-   * @param getMessages
-   * @param setMessage
-   * @returns
+   * @returns {Characteristic}
+   * @deprecated - As of v1, messages are no longer transmitted over bluetooth.
    */
   private messageCharacteristic(): Characteristic {
     return new Characteristic({
@@ -97,5 +100,25 @@ export default class BluetoothPeripheral implements Task {
         }
       },
     });
+  }
+
+  /**
+   * Read-only GATT characteristic that returns the device's user id.
+   * @returns {Characteristic}
+   */
+  private userIdCharacteristic(): Characteristic {
+    return new Characteristic({
+      uuid: USER_ID_CHARACTERISTIC_UUID,
+      value: this.getOrSetAdLocalName(),
+      properties: ['read'],
+      permissions: ['readable'],
+    });
+  }
+
+  private getOrSetAdLocalName(): string {
+    if (this.adLocalName === '') {
+      this.adLocalName = encode(this.storage.getUserId());
+    }
+    return this.adLocalName;
   }
 }
