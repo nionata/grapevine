@@ -17,21 +17,26 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Grapevine" textAlignment="center" lineBreakMode="middleTruncation" baselineAdjustment="alignBaselines" minimumFontSize="18" translatesAutoresizingMaskIntoConstraints="NO" id="GJd-Yh-RWb">
-                                <rect key="frame" x="0.0" y="146.5" width="375" height="43"/>
+                                <rect key="frame" x="0.0" y="-1304.5" width="375" height="2944.5"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="36"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" image="LogoTransparent" translatesAutoresizingMaskIntoConstraints="NO" id="z4P-9C-hg0">
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LogoTransparent" translatesAutoresizingMaskIntoConstraints="NO" id="z4P-9C-hg0">
                                 <rect key="frame" x="0.0" y="264" width="375" height="294"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="294" id="BFu-fM-wgs"/>
+                                </constraints>
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="z4P-9C-hg0" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" id="8r9-Zm-CN1"/>
+                            <constraint firstItem="z4P-9C-hg0" firstAttribute="centerY" secondItem="GJd-Yh-RWb" secondAttribute="bottom" multiplier="1/4" constant="1" id="IbV-88-o5l"/>
                             <constraint firstItem="Bcu-3y-fUS" firstAttribute="centerX" secondItem="GJd-Yh-RWb" secondAttribute="centerX" id="Q3B-4B-g5h"/>
                             <constraint firstItem="z4P-9C-hg0" firstAttribute="trailing" secondItem="Bcu-3y-fUS" secondAttribute="trailing" id="ijV-hq-Nm0"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="z4P-9C-hg0" secondAttribute="bottom" constant="109" id="las-TR-JhF"/>
                             <constraint firstItem="GJd-Yh-RWb" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="bottom" multiplier="1/4" constant="1" id="moa-c2-u7t"/>
                             <constraint firstItem="GJd-Yh-RWb" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" symbolic="YES" id="x7j-FC-K8j"/>
                         </constraints>
