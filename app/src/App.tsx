@@ -119,13 +119,27 @@ class App extends React.Component<AppProps, AppState> {
         </TouchableOpacity>
 
         {/* Pops up modal from bottom, overriding any page to show the compose screen */}
-        <ComposeModal ref={this.composeRef} />
+        <Modal
+          ref={this.composeRef}
+          style={styles.modal}
+          swipeToClose={true}
+          // onClosed={onClose}
+        >
+          <ComposeModal />
+        </Modal>
       </NavigationContainer>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  modal: {
+    alignItems: 'center',
+    width: undefined,
+    height: undefined,
+    flex: 1,
+    paddingTop: 100,
+  },
   floatingButton: {
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.2)',
