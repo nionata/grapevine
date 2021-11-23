@@ -3,11 +3,9 @@ import {
   GRAPEVINE_SERVICE_UUID,
   USER_ID_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
-import { Peer, Task } from 'bluetooth';
+import { Task } from 'bluetooth';
 import { Storage } from 'storage';
-import { TextDecoder } from 'web-encoding';
-import { toByteArray } from 'base64-js';
-
+import { decode } from 'bluetooth/encoding';
 export default class BluetoothCentral implements Task {
   poweredOn: boolean;
   private manager: BleManager;
@@ -62,60 +60,62 @@ export default class BluetoothCentral implements Task {
    */
   private async handleDeviceScan(
     error: BleError | null,
-    scannedDevice: Device | null
+    device: Device | null
   ) {
     try {
       if (error) {
         console.error(error);
         return;
-      } else if (!scannedDevice) {
-        console.error('Device not found?');
+      } else if (!device) {
         return;
       }
-
-      const textDecoder = new TextDecoder('utf-8');
-      const value = textDecoder.decode(
-        toByteArray(scannedDevice.localName as string)
-      );
-      console.log(value);
-      console.log(scannedDevice.id, scannedDevice.localName);
-
-      // Log a new encounter for an existing or new peer
-      const peers = await this.storage.getPeers();
-      let peer: Peer = peers[scannedDevice.id]
-        ? peers[scannedDevice.id]
-        : {
-            device: scannedDevice,
-            encounters: 0,
-            transmissions: 0,
-            rssi: 0,
-            mtu: 0,
-          };
-      peer.encounters++;
-      peer.rssi = scannedDevice.rssi;
-      peer.mtu = scannedDevice.mtu;
       console.log(
-        `Discovered device '${peer.device.id}' (${peer.encounters} / ${peer.transmissions})`
+        `found device: ${device.id} ${device.localName} ${device.rssi} ${device.mtu}`
       );
-      await this.storage.setPeer(scannedDevice.id, peer);
+      // If the local name is not set or the local name does not decode (ie. it's not base64 encoded), then
+      // we can ignore this device scan as we are only looking for devices advertising our AD.
+      if (!device.localName) {
+        return;
+      }
+      const userId = decode(device.localName);
+      if (!userId) {
+        return;
+      }
+      // TODO: set a new encounter for this device
+      console.log(`encountered userId ${userId}`);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
-      // Before writing to a service characteristc, we must connect and explicitly discover
-      // all available options.
+  /**
+   * Connect to a scanned device and discover the available services and characteritstics. From there a read request will
+   * be sent to retrieve the user id from associated characteristic.
+   * @param {Device}
+   * @returns {Promise<string}
+   * @deprecated - As of v1, we are going to grab the user id directly from the local name in the advertisement data.
+   */
+  private async discoverAndReadCharacteristic(
+    scannedDevice: Device
+  ): Promise<string> {
+    try {
+      // Before writing to a service characteristc, we must connect and explicitly discover all available options
       const connectedDevice = await scannedDevice.connect();
       console.log(`Connected to device '${connectedDevice.id}'`);
       const discoveredDevice =
         await connectedDevice.discoverAllServicesAndCharacteristics();
-      console.log(
-        `Discovered services ${discoveredDevice.serviceUUIDs} on device ${discoveredDevice.id}`
-      );
-      await discoveredDevice.readCharacteristicForService(
-        GRAPEVINE_SERVICE_UUID,
-        USER_ID_CHARACTERISTIC_UUID
-      );
-      console.log(`Read userId froms device '${discoveredDevice.id}'`);
-      await this.storage.setPeer(scannedDevice.id, peer);
+      // The value will be loaded into the returned characteristic object
+      const characteristic =
+        await discoveredDevice.readCharacteristicForService(
+          GRAPEVINE_SERVICE_UUID,
+          USER_ID_CHARACTERISTIC_UUID
+        );
+      const userId = decode(characteristic.value as string);
+      console.log(`Read userId ${userId} from device '${discoveredDevice.id}'`);
+      return userId;
     } catch (err) {
-      console.error(err);
+      console.log(err);
     }
+    return '';
   }
 }

@@ -6,20 +6,22 @@ import {
   USER_ID_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
 import { Messages } from 'api/message';
-import { toByteArray, fromByteArray } from 'base64-js';
 import { Task } from 'bluetooth';
 import { Storage } from 'storage';
-import { TextEncoder } from 'web-encoding';
+import { encode } from 'bluetooth/encoding';
+import { fromByteArray, toByteArray } from 'base64-js';
 
 export default class BluetoothPeripheral implements Task {
   poweredOn: boolean;
   private manager: Manager;
   private storage: Storage;
+  private adLocalName: string;
 
   constructor(storage: Storage) {
     this.poweredOn = false;
     this.manager = new Manager();
     this.storage = storage;
+    this.adLocalName = '';
   }
 
   /**
@@ -35,7 +37,7 @@ export default class BluetoothPeripheral implements Task {
     const advertisement = {
       // As of v1, we are able to achieve a connection-less detection scheme by setting the user's id as the local name.
       // This will be available as part of the advertisement packet, which our central manager can read after a scan.
-      name: this.encodedUserId(),
+      name: this.getOrSetAdLocalName(),
       serviceUuids: [GRAPEVINE_SERVICE_UUID],
     };
     const successMessage = prefix('Started advertising');
@@ -107,14 +109,16 @@ export default class BluetoothPeripheral implements Task {
   private userIdCharacteristic(): Characteristic {
     return new Characteristic({
       uuid: USER_ID_CHARACTERISTIC_UUID,
-      value: this.encodedUserId(),
+      value: this.getOrSetAdLocalName(),
       properties: ['read'],
       permissions: ['readable'],
     });
   }
 
-  private encodedUserId(): string {
-    const encoder = new TextEncoder();
-    return fromByteArray(encoder.encode(this.storage.getUserId()));
+  private getOrSetAdLocalName(): string {
+    if (this.adLocalName === '') {
+      this.adLocalName = encode(this.storage.getUserId());
+    }
+    return this.adLocalName;
   }
 }

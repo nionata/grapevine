@@ -51,9 +51,9 @@ func Connect(targetDevice string) {
 		panic("could not discover message characteristic")
 	}
 	var data []byte
-	_, err = characteristics[0].Read(data)
+	n, err := characteristics[0].Read(data)
 	util.Must("read characteristic", err)
-	println(string(data))
+	println(n, string(data))
 }
 
 func initCentral() {
