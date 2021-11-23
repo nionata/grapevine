@@ -3,7 +3,7 @@ import { StyleSheet, TextInput, Text } from 'react-native';
 import { TextField, Button, View } from 'react-native-ui-lib';
 import { cleanUpSwearyString } from 'swears';
 
-const ComposeModal = () => {
+const ComposeModal = (props: { requestClose: () => void }) => {
   const inputRef = createRef<TextInput>();
   const [messageInput, setMessageInput] = React.useState<string>('');
 
@@ -50,7 +50,7 @@ const ComposeModal = () => {
         backgroundColor="lightgray"
         label="Discard"
         size={Button.sizes.medium}
-        // onPress={requestClose}
+        onPress={props.requestClose}
       />
     </View>
   );

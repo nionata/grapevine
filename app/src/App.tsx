@@ -125,7 +125,7 @@ class App extends React.Component<AppProps, AppState> {
           swipeToClose={true}
           // onClosed={onClose}
         >
-          <ComposeModal />
+          <ComposeModal requestClose={() => this.composeRef.current?.close()} />
         </Modal>
       </NavigationContainer>
     );
