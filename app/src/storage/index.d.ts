@@ -5,6 +5,10 @@ export type MessageFilter = 'all' | 'authored' | 'received';
 
 export interface Storage {
   /**
+   * Gets the current users's uuid string
+   */
+  getUserId: () => string;
+  /**
    * Gets messages depending on the type
    */
   getMessages: (type?: MessageFilter) => Promise<Message[]>;
