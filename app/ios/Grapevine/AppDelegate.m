@@ -62,7 +62,7 @@ static void InitializeFlipper(UIApplication *application) {
 #else
   // The bundleURL method assumes your app's JS bundle is named main.jsbundle. 
   // https://docs.microsoft.com/en-us/appcenter/distribution/codepush/rn-get-started
-  return [CodePush URLForResource:@"main" withExtension:@"jsbundle"];
+  return [CodePush bundleURL];
 #endif
 }
 
