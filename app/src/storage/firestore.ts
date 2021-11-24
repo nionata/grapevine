@@ -40,10 +40,13 @@ export default class FirestoreStorage implements Storage {
     return messages;
   }
 
-  async setMessage(message: Message): Promise<void> {
+  async setMessage(content: string): Promise<void> {
     this.waitForUserId();
-    message.userId = this.userId;
-    message.createdAt = Date.now();
+    const message = {
+      content,
+      userId: this.userId,
+      createdAt: Date.now(),
+    };
 
     firestore()
       .collection('Messages')

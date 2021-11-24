@@ -36,10 +36,13 @@ export default class LocalStorage implements Storage {
     );
   }
 
-  async setMessage(message: Message): Promise<void> {
+  async setMessage(content: string): Promise<void> {
     this.waitForUserId();
-    message.userId = this.userId;
-    message.createdAt = Date.now();
+    const message = {
+      content,
+      userId: this.userId,
+      createdAt: Date.now(),
+    };
     let messages = await this.getMessages();
     messages.push(message);
     const messagesByteArr = Messages.encode(

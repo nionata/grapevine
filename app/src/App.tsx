@@ -158,6 +158,7 @@ class App extends React.Component<AppProps, AppState> {
         {/* Pops up modal from bottom, overriding any page to show the compose screen */}
         <Modal ref={this.composeRef} style={styles.modal} swipeToClose={true}>
           <ComposeModal
+            storage={this.storage}
             requestClose={() => {
               this.composeRef?.current?.close();
               this.updateMessages();

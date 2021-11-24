@@ -1,12 +1,13 @@
 import React, { createRef } from 'react';
 import { StyleSheet, TextInput, Text } from 'react-native';
 import { TextField, Button, View } from 'react-native-ui-lib';
+import { Storage } from 'storage';
 import { cleanUpSwearyString } from 'swears';
-import FirestoreStorage from '../storage/firestore';
 
-const storage = new FirestoreStorage();
-
-const ComposeModal = (props: { requestClose: () => void }) => {
+const ComposeModal = (props: {
+  storage: Storage;
+  requestClose: () => void;
+}) => {
   const inputRef = createRef<TextInput>();
   const [messageInput, setMessageInput] = React.useState<string>('');
 
@@ -17,11 +18,7 @@ const ComposeModal = (props: { requestClose: () => void }) => {
         const cleanedInput = cleanUpSwearyString(messageInput);
         setMessageInput(cleanedInput);
 
-        await storage.setMessage({
-          content: cleanedInput,
-          userId: 'joemomma',
-          createdAt: 1234,
-        });
+        await props.storage.setMessage(cleanedInput);
 
         props.requestClose();
       }

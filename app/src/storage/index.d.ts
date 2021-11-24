@@ -13,9 +13,9 @@ export interface Storage {
    */
   getMessages: (type?: MessageFilter) => Promise<Message[]>;
   /**
-   * Sets a message
+   * Sets a new message for the user with the given content
    */
-  setMessage: (message: Message) => Promise<void>;
+  setMessage: (content: string) => Promise<void>;
   /**
    * Gets peers
    */
