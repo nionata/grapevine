@@ -8,14 +8,15 @@ import uuid from 'react-native-uuid';
 
 export default class LocalStorage implements Storage {
   private userId: string;
+  private userIdLoaded: Promise<void>;
 
   constructor() {
     this.userId = '';
-    this.loadUserId();
+    this.userIdLoaded = this.loadUserId();
   }
 
-  getUserId(): string {
-    this.waitForUserId();
+  async getUserId(): Promise<string> {
+    await this.userIdLoaded;
     return this.userId;
   }
 
@@ -28,7 +29,7 @@ export default class LocalStorage implements Storage {
     if (filter === 'all') {
       return messages;
     }
-    this.waitForUserId();
+    await this.userIdLoaded;
     return messages.filter((message) =>
       filter === 'authored'
         ? message.userId === this.userId
@@ -36,10 +37,13 @@ export default class LocalStorage implements Storage {
     );
   }
 
-  async setMessage(message: Message): Promise<void> {
-    this.waitForUserId();
-    message.userId = this.userId;
-    message.createdAt = Date.now();
+  async setMessage(content: string): Promise<boolean> {
+    await this.userIdLoaded;
+    const message = {
+      content,
+      userId: this.userId,
+      createdAt: Date.now(),
+    };
     let messages = await this.getMessages();
     messages.push(message);
     const messagesByteArr = Messages.encode(
@@ -48,6 +52,7 @@ export default class LocalStorage implements Storage {
       })
     ).finish();
     await AsyncStorage.setItem(MESSAGES_KEY, fromByteArray(messagesByteArr));
+    return true;
   }
 
   async getPeers(): Promise<Peers> {
@@ -81,13 +86,6 @@ export default class LocalStorage implements Storage {
       console.error(err);
       this.loadUserId();
     }
-  }
-
-  /**
-   * A lock for userId to safeguard against an op running while loadUserId is running
-   */
-  private waitForUserId() {
-    while (!this.userId) {}
   }
 
   /**

@@ -7,15 +7,15 @@ export interface Storage {
   /**
    * Gets the current users's uuid string
    */
-  getUserId: () => string;
+  getUserId: () => Promise<string>;
   /**
    * Gets messages depending on the type
    */
   getMessages: (type?: MessageFilter) => Promise<Message[]>;
   /**
-   * Sets a message
+   * Sets a new message for the user with the given content
    */
-  setMessage: (message: Message) => Promise<void>;
+  setMessage: (content: string) => Promise<boolean>;
   /**
    * Gets peers
    */

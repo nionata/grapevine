@@ -1,5 +1,10 @@
 import { fromByteArray, toByteArray } from 'base64-js';
 import { TextDecoder, TextEncoder } from 'web-encoding';
+import { AD_LOCAL_NAME_PREFIX } from './const';
+
+export const decodeUserId = (value: string): string => {
+  return decode(value).substring(AD_LOCAL_NAME_PREFIX.length);
+};
 
 export const decode = (encodedValue: string): string => {
   try {
@@ -10,6 +15,10 @@ export const decode = (encodedValue: string): string => {
     console.error(`Failed to decode value ${encodedValue}`, err);
   }
   return '';
+};
+
+export const encodeUserId = (value: string): string => {
+  return encode(`${AD_LOCAL_NAME_PREFIX}${value}`);
 };
 
 export const encode = (value: string): string => {

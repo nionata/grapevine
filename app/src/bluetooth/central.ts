@@ -5,7 +5,7 @@ import {
 } from 'bluetooth/const';
 import { Task } from 'bluetooth';
 import { Storage } from 'storage';
-import { decode } from 'bluetooth/encoding';
+import { decodeUserId } from 'bluetooth/encoding';
 export default class BluetoothCentral implements Task {
   poweredOn: boolean;
   private manager: BleManager;
@@ -77,7 +77,7 @@ export default class BluetoothCentral implements Task {
       if (!device.localName) {
         return;
       }
-      const userId = decode(device.localName);
+      const userId = decodeUserId(device.localName);
       if (!userId) {
         return;
       }
@@ -110,7 +110,7 @@ export default class BluetoothCentral implements Task {
           GRAPEVINE_SERVICE_UUID,
           USER_ID_CHARACTERISTIC_UUID
         );
-      const userId = decode(characteristic.value as string);
+      const userId = decodeUserId(characteristic.value as string);
       console.log(`Read userId ${userId} from device '${discoveredDevice.id}'`);
       return userId;
     } catch (err) {
