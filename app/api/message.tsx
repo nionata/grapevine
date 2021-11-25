@@ -12,6 +12,8 @@ export interface Message {
   userId: string;
   /** Timestamp of when the message was created. */
   createdAt: number;
+  /** ID of the document in firestore */
+  id: string;
 }
 
 /** A list of grapevine messages */

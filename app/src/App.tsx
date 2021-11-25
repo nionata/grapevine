@@ -17,9 +17,8 @@ import { TESTING } from 'const';
 
 // Screens
 import HomeScreen from 'screens/home';
-import PeersScreen from 'screens/peers';
-import SettingsScreen from 'screens/settings';
 import ComposeModal from 'screens/compose';
+import ProfileScreen from 'screens/profile';
 
 const Tab = createBottomTabNavigator();
 
@@ -113,10 +112,8 @@ class App extends React.Component<AppProps, AppState> {
 
               if (route.name === 'Grapevine') {
                 iconName = focused ? 'home' : 'home-outline';
-              } else if (route.name === 'Peers') {
-                iconName = focused ? 'bluetooth' : 'bluetooth-outline';
-              } else if (route.name === 'Settings') {
-                iconName = focused ? 'cog' : 'cog-outline';
+              } else if (route.name === 'Profile') {
+                iconName = focused ? 'person' : 'person-outline';
               }
 
               // You can return any component that you like here!
@@ -134,11 +131,7 @@ class App extends React.Component<AppProps, AppState> {
             name="Grapevine"
             children={() => <HomeScreen messages={this.state.messages} />}
           />
-          <Tab.Screen
-            name="Peers"
-            children={() => <PeersScreen peers={this.state.peers} />}
-          />
-          <Tab.Screen name="Settings" children={() => <SettingsScreen />} />
+          <Tab.Screen name="Profile" children={() => <ProfileScreen />} />
         </Tab.Navigator>
 
         {/* floating action button to compose message */}

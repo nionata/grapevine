@@ -3,7 +3,9 @@ import { Message } from 'api/message';
 import { Peer, Peers } from 'bluetooth';
 import { MessageFilter, Storage } from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
-import firestore from '@react-native-firebase/firestore';
+import firestore, {
+  FirebaseFirestoreTypes,
+} from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 export default class FirestoreStorage implements Storage {
@@ -22,18 +24,31 @@ export default class FirestoreStorage implements Storage {
 
   async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
     try {
-      if (filter === 'all') {
-        // do something with the filter
+      let documents: FirebaseFirestoreTypes.QuerySnapshot<Message>;
+      if (filter === 'authored') {
+        console.log(
+          'looking for messages with user ID: ',
+          typeof this.userId,
+          ' bah humbug'
+        );
+        documents = await firestore()
+          .collection<Message>('Messages')
+          .where('userId', '==', await this.getUserId())
+          .orderBy('createdAt', 'desc')
+          .get();
+      } else {
+        documents = await firestore()
+          .collection<Message>('Messages')
+          .orderBy('createdAt', 'desc')
+          .get();
       }
-
-      const documents = await firestore()
-        .collection<Message>('Messages')
-        .orderBy('createdAt', 'desc')
-        .get();
 
       const messages: Message[] = [];
       documents.forEach((documentSnapshot) => {
-        messages.push(documentSnapshot.data());
+        messages.push({
+          ...documentSnapshot.data(),
+          id: documentSnapshot.id,
+        });
       });
 
       return messages;
@@ -108,7 +123,7 @@ export default class FirestoreStorage implements Storage {
       this.userId = String(userId);
       console.log(`User ${this.userId} signed in`);
     } catch (err) {
-      console.error(err);
+      console.error('Err loading user Id', err);
       // TODO: Implement a timeout - possibly even a util retryTillSuccessWithTimeout
       return this.loadUserId();
     }

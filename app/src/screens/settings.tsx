@@ -1,10 +1,14 @@
 import React, { useEffect } from 'react';
-import { View, Text, Card, Switch } from 'react-native-ui-lib';
+import { View, Text, Card, Switch, Button } from 'react-native-ui-lib';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { StyleSheet } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-function SettingsScreen() {
+import { ProfileProps } from './profile';
+import { Peers } from 'bluetooth';
+
+function SettingsScreen(props: { peers: Peers }, { navigation }: ProfileProps) {
   const [isTransmitting, setIsTransmitting] = React.useState<boolean>(true);
 
   const getIsTranmittingSetting: () => Promise<void> = async () => {
@@ -29,16 +33,6 @@ function SettingsScreen() {
   useEffect(() => {
     getIsTranmittingSetting();
   }, []);
-
-  const styles = StyleSheet.create({
-    cardHeader: {
-      fontSize: 20,
-      fontWeight: 'bold',
-    },
-    bold: {
-      fontWeight: 'bold',
-    },
-  });
 
   const otherSettingsCardContents = (
     <View>
@@ -79,6 +73,15 @@ function SettingsScreen() {
 
   return (
     <View padding-20>
+      <Button
+        marginB-10
+        backgroundColor="blueviolet"
+        label="Back"
+        size={Button.sizes.medium}
+        onPress={() => navigation.navigate('ProfileHome')}
+      >
+        <Ionicons style={styles.white} name="chevron-back" />
+      </Button>
       <Card padding-20>{otherSettingsCardContents}</Card>
       <Card marginT-20 padding-20>
         {statsCardContents}
@@ -86,5 +89,18 @@ function SettingsScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  cardHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  white: {
+    color: 'white',
+  },
+});
 
 export default SettingsScreen;
