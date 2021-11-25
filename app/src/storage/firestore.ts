@@ -1,7 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Message } from 'api/message';
 import { Peer, Peers } from 'bluetooth';
-import { MessageFilter, Storage } from 'storage';
+import {
+  Advertisement,
+  Message,
+  MessageFilter,
+  Storage,
+  WaterMarks,
+} from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
 import firestore, {
   FirebaseFirestoreTypes,
@@ -68,7 +73,7 @@ export default class FirestoreStorage implements Storage {
     }
   }
 
-  async setMessage(content: string): Promise<boolean> {
+  async setMessage(content: string): Promise<void> {
     try {
       await this.userIdLoaded;
       const timestamp = Date.now();
@@ -80,10 +85,41 @@ export default class FirestoreStorage implements Storage {
         vines: 0,
       });
       console.log('Message saved to firestore');
-      return true;
     } catch (err) {
       console.error('Error adding msg to firestore', err);
-      return false;
+      throw Error(`Error adding msg to firestore ${err}`);
+    }
+  }
+
+  async setAdvertisement(ad: Advertisement): Promise<void> {
+    try {
+      await this.userIdLoaded;
+      const { userId: adUserId } = ad;
+      await firestore().doc(advertisement(this.userId, adUserId)).set(ad);
+
+      // To see if we are "caught up" on the advertising user's messages, we must retrieve this user's
+      // high-water marks and compare them to the latest timestamps of the advertiser.
+      const waterMarks = (
+        await firestore()
+          .doc<WaterMarks>(waterMarksPath(this.userId, adUserId))
+          .get()
+      ).data();
+      // Read all or use the water marks as a startAt
+      const adAuthoredMessages = (
+        await firestore()
+          .collection<Message>(authoredMessages(adUserId))
+          .startAt(waterMarks?.authored)
+          .get()
+      ).docs;
+      const adReceivedMessages = (
+        await firestore()
+          .collection<Message>(authoredMessages(adUserId))
+          .startAt(waterMarks?.authored)
+          .get()
+      ).docs;
+    } catch (err) {
+      console.error('Error adding msg to firestore', err);
+      throw Error(`Error adding msg to firestore ${err}`);
     }
   }
 
@@ -153,3 +189,11 @@ const authoredMessage = (userId: string, timestamp: number): string =>
   `Messagesv1/${userId}/authored/${timestamp}`;
 const receivedMessages = (userId: string): string =>
   `Messagesv1/${userId}/received`;
+const receivedMessage = (userId: string, timestamp: number): string =>
+  `Messagesv1/${userId}/received/${timestamp}`;
+
+const advertisement = (userId: string, advertiser: string): string =>
+  `Advertisements/${userId}/${advertiser}`;
+
+const waterMarksPath = (userId: string, advertiser: string): string =>
+  `WaterMarks/${userId}/${advertiser}`;

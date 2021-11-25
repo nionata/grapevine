@@ -1,4 +1,4 @@
-import { Message } from 'api/message';
+import { Message } from 'storage';
 import { Peers } from 'bluetooth';
 
 interface AppProps {}
