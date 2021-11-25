@@ -3,7 +3,9 @@ import { Message } from 'api/message';
 import { Peer, Peers } from 'bluetooth';
 import { MessageFilter, Storage } from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
-import firestore from '@react-native-firebase/firestore';
+import firestore, {
+  FirebaseFirestoreTypes,
+} from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 export default class FirestoreStorage implements Storage {
@@ -22,20 +24,35 @@ export default class FirestoreStorage implements Storage {
 
   async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
     try {
-      if (filter === 'all') {
-        // do something with the filter
-      }
+      await this.userIdLoaded;
+      const authoredMessagesRef = firestore().collection<Message>(
+        authoredMessages(this.userId)
+      );
+      const receivedMessagesRef = firestore().collection<Message>(
+        receivedMessages(this.userId)
+      );
 
-      const documents = await firestore()
-        .collection<Message>('Messages')
-        .orderBy('createdAt', 'desc')
-        .get();
+      let documents: FirebaseFirestoreTypes.QueryDocumentSnapshot<Message>[];
+      switch (filter) {
+        case 'all':
+          documents = [
+            ...(await authoredMessagesRef.get()).docs,
+            ...(await receivedMessagesRef.get()).docs,
+          ];
+          break;
+        case 'authored':
+          documents = (await authoredMessagesRef.get()).docs;
+          break;
+        case 'received':
+          documents = (await receivedMessagesRef.get()).docs;
+          break;
+      }
 
       const messages: Message[] = [];
       documents.forEach((documentSnapshot) => {
         messages.push(documentSnapshot.data());
       });
-
+      console.log(messages);
       return messages;
     } catch (err) {
       console.error(err);
@@ -46,10 +63,13 @@ export default class FirestoreStorage implements Storage {
   async setMessage(content: string): Promise<boolean> {
     try {
       await this.userIdLoaded;
-      await firestore().collection('Messages').add({
+      const timestamp = Date.now();
+      await firestore().doc(authoredMessage(this.userId, timestamp)).set({
         content,
         userId: this.userId,
-        createdAt: Date.now(),
+        createdAt: timestamp,
+        grapes: 0,
+        vines: 0,
       });
       console.log('Message saved to firestore');
       return true;
@@ -118,3 +138,10 @@ export default class FirestoreStorage implements Storage {
     await AsyncStorage.multiRemove([USER_ID_KEY, PEERS_KEY, MESSAGES_KEY]);
   }
 }
+
+const authoredMessages = (userId: string): string =>
+  `Messagesv1/${userId}/authored`;
+const authoredMessage = (userId: string, timestamp: number): string =>
+  `Messagesv1/${userId}/authored/${timestamp}`;
+const receivedMessages = (userId: string): string =>
+  `Messagesv1/${userId}/received`;
