@@ -65,7 +65,6 @@ export default class FirestoreStorage implements Storage {
       documents.forEach((documentSnapshot) => {
         messages.push(documentSnapshot.data());
       });
-      console.log(messages);
       return messages;
     } catch (err) {
       console.error(err);
