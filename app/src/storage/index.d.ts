@@ -44,8 +44,10 @@ export interface Advertisement {
   // User id of the advertiser
   userId: string;
   mtu: number;
-  rssi: number;
+  rssi?: number;
   receivedAt: number;
+  txPowerLevel?: number;
+  deviceId: string;
 }
 
 /**

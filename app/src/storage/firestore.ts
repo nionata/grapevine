@@ -29,13 +29,14 @@ export default class FirestoreStorage implements Storage {
 
   async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
     try {
-      await this.userIdLoaded;
-      const authoredMessagesRef = firestore().collection<Message>(
-        authoredMessages(this.userId)
-      );
-      const receivedMessagesRef = firestore().collection<Message>(
-        receivedMessages(this.userId)
-      );
+      const userId = await this.getUserId();
+      // By default, docs are returned in ascending order by document id (timestamp)
+      const authoredMessagesRef = firestore()
+        .collection<Message>(authoredMessages(userId))
+        .orderBy('createdAt', 'desc');
+      const receivedMessagesRef = firestore()
+        .collection<Message>(receivedMessages(userId))
+        .orderBy('createdAt', 'desc');
 
       let documents: FirebaseFirestoreTypes.QueryDocumentSnapshot<Message>[];
       switch (filter) {
@@ -43,7 +44,7 @@ export default class FirestoreStorage implements Storage {
           documents = (
             await firestore()
               .collection<Message>('Messages')
-              .orderBy('createdAt', 'asc')
+              .orderBy('createdAt', 'desc')
               .get()
           ).docs;
           break;
@@ -74,11 +75,11 @@ export default class FirestoreStorage implements Storage {
 
   async setMessage(content: string): Promise<void> {
     try {
-      await this.userIdLoaded;
+      const userId = await this.getUserId();
       const timestamp = Date.now();
-      await firestore().doc(authoredMessage(this.userId, timestamp)).set({
+      await firestore().doc(authoredMessage(userId, timestamp)).set({
         content,
-        userId: this.userId,
+        userId,
         createdAt: timestamp,
         grapes: 0,
         vines: 0,
@@ -92,33 +93,32 @@ export default class FirestoreStorage implements Storage {
 
   async setAdvertisement(ad: Advertisement): Promise<void> {
     try {
-      await this.userIdLoaded;
-      const { userId: adUserId } = ad;
-      await firestore().doc(advertisement(this.userId, adUserId)).set(ad);
+      const userId = await this.getUserId();
+      const { userId: adUserId, receivedAt } = ad;
+      await advertisementDocRef(userId, adUserId, receivedAt).set(ad);
 
       // To see if we are "caught up" on the advertising user's messages, we must retrieve this user's
-      // high-water marks and compare them to the latest timestamps of the advertiser.
-      const waterMarks = (
-        await firestore()
-          .doc<WaterMarks>(waterMarksPath(this.userId, adUserId))
-          .get()
-      ).data();
-      // Read all or use the water marks as a startAt
+      // high-water marks and the high-water marks of the ad user's messages.
+      const waterMarks = (await waterMarksDocRef(userId, adUserId).get()).docs;
       const adAuthoredMessages = (
         await firestore()
           .collection<Message>(authoredMessages(adUserId))
-          .startAt(waterMarks?.authored)
+          .orderBy('createdAt')
+          .limitToLast(1)
           .get()
       ).docs;
       const adReceivedMessages = (
         await firestore()
           .collection<Message>(authoredMessages(adUserId))
-          .startAt(waterMarks?.authored)
+          .orderBy('createdAt')
+          .limitToLast(1)
           .get()
       ).docs;
+
+      console.log(waterMarks, adAuthoredMessages, adReceivedMessages);
     } catch (err) {
-      console.error('Error adding msg to firestore', err);
-      throw Error(`Error adding msg to firestore ${err}`);
+      console.error('Error adding advertisement to firestore', err);
+      throw Error(`Error adding advertisement to firestore ${err}`);
     }
   }
 
@@ -191,8 +191,19 @@ const receivedMessages = (userId: string): string =>
 const receivedMessage = (userId: string, timestamp: number): string =>
   `Messagesv1/${userId}/received/${timestamp}`;
 
-const advertisement = (userId: string, advertiser: string): string =>
-  `Advertisements/${userId}/${advertiser}`;
+const advertisementDocRef = (
+  userId: string,
+  advertiser: string,
+  timestamp: number
+) =>
+  firestore()
+    .collection('Ads')
+    .doc(userId)
+    .collection(advertiser)
+    .doc(String(timestamp));
 
-const waterMarksPath = (userId: string, advertiser: string): string =>
-  `WaterMarks/${userId}/${advertiser}`;
+const waterMarksDocRef = (userId: string, advertiser: string) =>
+  firestore()
+    .collection<WaterMarks>('WaterMarks')
+    .doc(userId)
+    .collection(advertiser);

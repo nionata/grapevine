@@ -81,8 +81,15 @@ export default class BluetoothCentral implements Task {
       if (!userId) {
         return;
       }
-      // TODO: set a new encounter for this device
-      console.log(`encountered userId ${userId}`);
+      console.log(`saving ad from userId ${userId}`);
+      this.storage.setAdvertisement({
+        userId,
+        receivedAt: Date.now(),
+        rssi: device.rssi ? device.rssi : undefined,
+        mtu: device.mtu,
+        txPowerLevel: device.txPowerLevel ? device.txPowerLevel : undefined,
+        deviceId: device.id,
+      });
     } catch (err) {
       console.error(err);
     }

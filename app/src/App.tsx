@@ -50,6 +50,12 @@ class App extends React.Component<AppProps, AppState> {
     new Promise(async () => {
       await this.storage.getUserId();
       await this.hydrateState();
+      await this.storage.setAdvertisement({
+        userId: '1',
+        receivedAt: Date.now(),
+        mtu: 0,
+        deviceId: '012132',
+      });
     }).then(() => {
       this.setState((state) => {
         return {
@@ -71,7 +77,7 @@ class App extends React.Component<AppProps, AppState> {
 
   async hydrateState() {
     try {
-      const messages = await this.storage.getMessages('received');
+      const messages = await this.storage.getMessages('authored');
       const peers = await this.storage.getPeers();
       this.setState((state) => {
         return {
