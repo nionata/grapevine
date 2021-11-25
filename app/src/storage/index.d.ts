@@ -1,7 +1,7 @@
 import { Message } from 'api/message';
 import { Peer, Peers } from 'bluetooth';
 
-export type MessageFilter = 'all' | 'authored' | 'received';
+export type MessageFilter = 'global' | 'all' | 'authored' | 'received';
 
 export interface Storage {
   /**

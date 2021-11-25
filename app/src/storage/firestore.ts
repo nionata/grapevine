@@ -34,6 +34,14 @@ export default class FirestoreStorage implements Storage {
 
       let documents: FirebaseFirestoreTypes.QueryDocumentSnapshot<Message>[];
       switch (filter) {
+        case 'global':
+          documents = (
+            await firestore()
+              .collection<Message>('Messages')
+              .orderBy('createdAt', 'asc')
+              .get()
+          ).docs;
+          break;
         case 'all':
           documents = [
             ...(await authoredMessagesRef.get()).docs,
