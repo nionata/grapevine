@@ -3,60 +3,60 @@ import { Message } from 'api/message';
 import { Peer, Peers } from 'bluetooth';
 import { MessageFilter, Storage } from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
-import uuid from 'react-native-uuid';
 import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 export default class FirestoreStorage implements Storage {
   private userId: string;
+  private userIdLoaded: Promise<void>;
 
   constructor() {
     this.userId = '';
-    this.loadUserId();
+    this.userIdLoaded = this.loadUserId();
   }
 
-  getUserId(): string {
+  async getUserId(): Promise<string> {
+    await this.userIdLoaded;
     return this.userId;
   }
 
   async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
-    if (filter === 'all') {
-      // do something with the filter
-    }
+    try {
+      if (filter === 'all') {
+        // do something with the filter
+      }
 
-    const documents = await firestore()
-      .collection<Message>('Messages')
-      .orderBy('createdAt', 'desc')
-      .get();
+      const documents = await firestore()
+        .collection<Message>('Messages')
+        .orderBy('createdAt', 'desc')
+        .get();
 
-    const messages: Message[] = [];
-    documents.forEach((documentSnapshot) => {
-      messages.push({
-        content: documentSnapshot.data().content,
-        userId: documentSnapshot.data().userId,
-        createdAt: documentSnapshot.data().createdAt,
+      const messages: Message[] = [];
+      documents.forEach((documentSnapshot) => {
+        messages.push(documentSnapshot.data());
       });
-    });
 
-    return messages;
+      return messages;
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
   }
 
-  async setMessage(content: string): Promise<void> {
-    this.waitForUserId();
-    const message = {
-      content,
-      userId: this.userId,
-      createdAt: Date.now(),
-    };
-
-    firestore()
-      .collection('Messages')
-      .add(message)
-      .then(() => {
-        console.log('Message saved to firestore');
-      })
-      .catch((err: Error) => {
-        console.error('Error adding msg to firestore', err);
+  async setMessage(content: string): Promise<boolean> {
+    try {
+      await this.userIdLoaded;
+      await firestore().collection('Messages').add({
+        content,
+        userId: this.userId,
+        createdAt: Date.now(),
       });
+      console.log('Message saved to firestore');
+      return true;
+    } catch (err) {
+      console.error('Error adding msg to firestore', err);
+      return false;
+    }
   }
 
   async getPeers(): Promise<Peers> {
@@ -74,29 +74,44 @@ export default class FirestoreStorage implements Storage {
   }
 
   /**
-   * Load the user id into memory. The user id should be generated once on the first time the app is opened.
-   * Subsequent sessions should retrieve the user id from storage.
+   * Anonymously sign in to a firebase account and retrieve the corresponding Grapevine user id.
+   * The full firebase user id is too long to include in the adverstisement packet. Instead,
+   * each user will have a user id assigned from a monotonic sequence value.
    */
-  private async loadUserId() {
+  private async loadUserId(): Promise<void> {
     try {
-      let userId = await AsyncStorage.getItem(USER_ID_KEY);
-      if (!userId) {
-        userId = uuid.v4() as string;
-        await AsyncStorage.setItem(USER_ID_KEY, userId);
+      const user = await auth().signInAnonymously();
+      const firebaseUid = user.user.uid;
+      const userRef = firestore().collection('Users').doc(firebaseUid);
+      let userId = (await userRef.get()).get('userId');
+      if (userId === undefined) {
+        console.log(`Assigning a Grapevine userId to new user ${firebaseUid}`);
+        // If the read value does not stay consistent for the length of this txn, then the txn will fail and retry.
+        // This will guarentee our userId remains consistent and there are never two users assigned the same id.
+        // https://firebase.google.com/docs/firestore/manage-data/transactions#transactions
+        userId = await firestore().runTransaction(async (txn) => {
+          const userIdSeqRef = firestore()
+            .collection('Sequences')
+            .doc('userId');
+          const userIdSeq = (await txn.get(userIdSeqRef)).get(
+            'value'
+          ) as number;
+          txn.set(userRef, {
+            userId: userIdSeq,
+          });
+          txn.update(userIdSeqRef, {
+            value: userIdSeq + 1,
+          });
+          return userIdSeq;
+        });
       }
-      this.userId = userId;
-      console.log(`Loaded user ${this.userId}`);
+      this.userId = String(userId);
+      console.log(`User ${this.userId} signed in`);
     } catch (err) {
       console.error(err);
-      this.loadUserId();
+      // TODO: Implement a timeout - possibly even a util retryTillSuccessWithTimeout
+      return this.loadUserId();
     }
-  }
-
-  /**
-   * A lock for userId to safeguard against an op running while loadUserId is running
-   */
-  private waitForUserId() {
-    while (!this.userId) {}
   }
 
   private async purgeAll() {

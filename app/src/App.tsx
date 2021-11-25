@@ -6,13 +6,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Text, TouchableOpacity } from 'react-native-ui-lib';
 import Modal from 'react-native-modalbox';
-import auth from '@react-native-firebase/auth';
 
 // Custom
 import { AppProps, AppState } from 'index';
 import BluetoothManager from 'bluetooth/manager';
 import { Storage } from 'storage';
-// import LocalStorage from 'storage/local';
 import FirestoreStorage from 'storage/firestore';
 import { TEST_MESSAGES, TEST_PEERS } from 'data.test';
 import { TESTING } from 'const';
@@ -35,40 +33,31 @@ class App extends React.Component<AppProps, AppState> {
   constructor(props: AppProps) {
     super(props);
 
+    this.composeRef = React.createRef();
+
+    this.storage = new FirestoreStorage();
+    this.bluetoothManager = new BluetoothManager(this.storage);
+    this.bluetoothManager.start().then(() => {
+      console.log('Bluetooth manager started');
+    });
+
     this.state = {
       messages: TESTING ? TEST_MESSAGES : [],
       peers: TESTING ? TEST_PEERS : {},
       isInitializing: true,
     };
-    this.composeRef = React.createRef();
-
-    this.storage = new FirestoreStorage();
-    this.bluetoothManager = new BluetoothManager(this.storage);
     this.stateTicker = setInterval(() => this.hydrateState(), 5 * 1000);
-    this.hydrateState();
-    this.anonSignIn();
-    this.bluetoothManager.start().then(() => {
-      console.log('Bluetooth manager started');
-    });
-  }
-
-  anonSignIn() {
-    auth()
-      .signInAnonymously()
-      .then(() => {
-        const user = auth().currentUser;
-        console.log('User signed in anonymously');
-        console.log('user', user);
-        this.setState((state) => {
-          return {
-            ...state,
-            isInitializing: false,
-          };
-        });
-      })
-      .catch((error) => {
-        console.error(error);
+    new Promise(async () => {
+      await this.storage.getUserId();
+      await this.hydrateState();
+    }).then(() => {
+      this.setState((state) => {
+        return {
+          ...state,
+          isInitializing: false,
+        };
       });
+    });
   }
 
   componentWillUnmount() {
@@ -122,7 +111,7 @@ class App extends React.Component<AppProps, AppState> {
             tabBarIcon: ({ focused, color, size }) => {
               let iconName: string = '';
 
-              if (route.name === 'GrapeVine') {
+              if (route.name === 'Grapevine') {
                 iconName = focused ? 'home' : 'home-outline';
               } else if (route.name === 'Peers') {
                 iconName = focused ? 'bluetooth' : 'bluetooth-outline';
@@ -135,10 +124,14 @@ class App extends React.Component<AppProps, AppState> {
             },
             tabBarActiveTintColor: 'blueviolet',
             tabBarInactiveTintColor: 'gray',
+            headerStyle: {
+              backgroundColor: 'blueviolet',
+            },
+            headerTintColor: 'white',
           })}
         >
           <Tab.Screen
-            name="GrapeVine"
+            name="Grapevine"
             children={() => <HomeScreen messages={this.state.messages} />}
           />
           <Tab.Screen

@@ -8,7 +8,7 @@ import {
 import { Messages } from 'api/message';
 import { Task } from 'bluetooth';
 import { Storage } from 'storage';
-import { encode } from 'bluetooth/encoding';
+import { encodeUserId } from 'bluetooth/encoding';
 import { fromByteArray, toByteArray } from 'base64-js';
 
 export default class BluetoothPeripheral implements Task {
@@ -37,7 +37,7 @@ export default class BluetoothPeripheral implements Task {
     const advertisement = {
       // As of v1, we are able to achieve a connection-less detection scheme by setting the user's id as the local name.
       // This will be available as part of the advertisement packet, which our central manager can read after a scan.
-      name: this.getOrSetAdLocalName(),
+      name: await this.getOrSetAdLocalName(),
       serviceUuids: [GRAPEVINE_SERVICE_UUID],
     };
     const successMessage = prefix('Started advertising');
@@ -53,7 +53,7 @@ export default class BluetoothPeripheral implements Task {
         await this.manager.addService(
           new Service({
             uuid: GRAPEVINE_SERVICE_UUID,
-            characteristics: [this.userIdCharacteristic()],
+            characteristics: [await this.userIdCharacteristic()],
           })
         );
         await this.manager.startAdvertising(advertisement);
@@ -96,7 +96,7 @@ export default class BluetoothPeripheral implements Task {
       onWriteRequest: async (value: string, offset?: number) => {
         console.log(`Write offset ${offset}`);
         for (let message of Messages.decode(toByteArray(value)).messages) {
-          await this.storage.setMessage(message);
+          await this.storage.setMessage(message.content);
         }
       },
     });
@@ -106,18 +106,18 @@ export default class BluetoothPeripheral implements Task {
    * Read-only GATT characteristic that returns the device's user id.
    * @returns {Characteristic}
    */
-  private userIdCharacteristic(): Characteristic {
+  private async userIdCharacteristic(): Promise<Characteristic> {
     return new Characteristic({
       uuid: USER_ID_CHARACTERISTIC_UUID,
-      value: this.getOrSetAdLocalName(),
+      value: await this.getOrSetAdLocalName(),
       properties: ['read'],
       permissions: ['readable'],
     });
   }
 
-  private getOrSetAdLocalName(): string {
+  private async getOrSetAdLocalName(): Promise<string> {
     if (this.adLocalName === '') {
-      this.adLocalName = encode(this.storage.getUserId());
+      this.adLocalName = encodeUserId(await this.storage.getUserId());
     }
     return this.adLocalName;
   }
