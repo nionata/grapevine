@@ -6,6 +6,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { ProfileProps } from './profile';
 import { Peers } from 'bluetooth';
+import cardStyles from '../styles/cards';
 
 function PeersCards(peers: Peers | null) {
   if (!peers) {
@@ -50,22 +51,16 @@ function SettingsScreen({ navigation, peers }: ProfileProps) {
         <Ionicons style={styles.white} name="chevron-back" />
       </Button>
 
-      <Text style={styles.cardHeader}>Stats</Text>
+      <Text style={cardStyles.cardHeader}>Stats</Text>
       <Card padding-20>{statsCardContents}</Card>
 
-      <Text style={styles.cardHeader}>Peers</Text>
+      <Text style={cardStyles.cardHeader}>Peers</Text>
       <View>{PeersCards(peers)}</View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  cardHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 5,
-  },
   bold: {
     fontWeight: 'bold',
   },

@@ -7,10 +7,12 @@ import { Message } from 'api/message';
 import FirestoreStorage from 'storage/firestore';
 
 import { ProfileProps } from './profile';
+import cardStyles from 'styles/cards';
 
 function ProfileHome({ navigation, peers }: ProfileProps) {
   const storage = new FirestoreStorage();
   const [messages, setMessages] = useState<Message[]>();
+  const [globalTransmit, setGlobalStransmit] = useState<boolean>(true);
 
   const getMessages: () => Promise<void> = async () => {
     console.log('[PROFILE] - running getMessages');
@@ -27,9 +29,7 @@ function ProfileHome({ navigation, peers }: ProfileProps) {
   });
 
   const saveGlobalTransmitSetting = (shouldTransmit: boolean): void => {
-    console.log(
-      'saving transmitting setting to ' + shouldTransmit + ' for user: '
-    );
+    setGlobalStransmit(shouldTransmit);
   };
 
   const saveIsTransmittingSetting = (
@@ -58,29 +58,32 @@ function ProfileHome({ navigation, peers }: ProfileProps) {
         <Text white>Settings</Text>
         <Ionicons style={styles.white} name="chevron-forward" />
       </Button>
-      <Card padding-10 marginB-10>
-        <Text bold>Global Transmission</Text>
+      <Text style={cardStyles.cardHeader}>Global Transmission</Text>
+      <Text style={cardStyles.cardHelpText}>
+        This setting controls whether all messages should be transmitted.
+        Disabling this disables transmission for every message!
+      </Text>
+      <Card style={cardStyles.card}>
         <View row centerV>
           <Switch
             onColor={'blueviolet'}
             offColor={'lightgray'}
-            value={true}
+            value={globalTransmit}
             onValueChange={(value: boolean) => saveGlobalTransmitSetting(value)}
             marginR-10
           />
           <Text>Transmit all messages</Text>
         </View>
-        <View paddingT-10>
-          <Text style={styles.date}>
-            This setting controls whether all messages should be transmitted.
-            Disabling this disables transmission for every message!
-          </Text>
-        </View>
       </Card>
+
+      <Text style={cardStyles.cardHeader}>My Messages</Text>
+      <Text style={cardStyles.cardHelpText} marginB-5>
+        You can toggle transmitting individual messages on and off as well.
+      </Text>
       <FlatList
         data={messages}
         renderItem={({ item }) => (
-          <Card padding-10 marginB-10 activeOpacity={1} row>
+          <Card style={cardStyles.card} row centerV>
             <Switch
               onColor={'blueviolet'}
               offColor={'lightgray'}
@@ -100,9 +103,6 @@ function ProfileHome({ navigation, peers }: ProfileProps) {
 }
 
 const styles = StyleSheet.create({
-  date: {
-    color: 'gray',
-  },
   header: {
     fontSize: 30,
     fontWeight: 'bold',
