@@ -1,69 +1,36 @@
-import React, { useEffect } from 'react';
-import { View, Text, Card, Switch, Button } from 'react-native-ui-lib';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React from 'react';
+import { View, Text, Card, Button } from 'react-native-ui-lib';
 
-import { StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { ProfileProps } from './profile';
 import { Peers } from 'bluetooth';
 
-function SettingsScreen(props: { peers: Peers }, { navigation }: ProfileProps) {
-  const [isTransmitting, setIsTransmitting] = React.useState<boolean>(true);
+function PeersCards(peers: Peers | null) {
+  if (!peers) {
+    return <Text>No Devices found.</Text>;
+  }
 
-  const getIsTranmittingSetting: () => Promise<void> = async () => {
-    try {
-      const shouldTransmit =
-        (await AsyncStorage.getItem('@grapevine_is_transmitting')) === 'true';
-      setIsTransmitting(shouldTransmit);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const peerValues = Object.values(peers);
+  peerValues.sort((a, b) => a.encounters + b.encounters);
 
-  const saveIsTransmittingSetting: (shouldTransmit: boolean) => Promise<void> =
-    async (shouldTransmit) => {
-      await AsyncStorage.setItem(
-        '@grapevine_is_transmitting',
-        shouldTransmit ? 'true' : 'false'
-      );
-      setIsTransmitting(shouldTransmit);
-    };
+  const peersCards = peerValues.map((peer, index) => (
+    <Card padding-5 marginB-10 activeOpacity={1} key={index}>
+      <Text>Name: {peer.device.name}</Text>
+      <Text>Id: {peer.device.id}</Text>
+      <Text>Encounters: {peer.encounters}</Text>
+      <Text>Transmissions: {peer.transmissions}</Text>
+    </Card>
+  ));
 
-  useEffect(() => {
-    getIsTranmittingSetting();
-  }, []);
+  return <ScrollView padding-20>{peersCards}</ScrollView>;
+}
 
-  const otherSettingsCardContents = (
-    <View>
-      <Text style={styles.cardHeader} marginB-10>
-        Transmission Settings
-      </Text>
-      <View row centerV>
-        <Switch
-          onColor={'blueviolet'}
-          offColor={'lightgray'}
-          value={isTransmitting}
-          onValueChange={saveIsTransmittingSetting}
-          marginR-10
-        />
-        <Text>Transmit Message</Text>
-      </View>
-      <View paddingT-10>
-        <Text color={'gray'}>
-          Controls whether your message will be transmitted to other GrapeVine
-          users.
-        </Text>
-      </View>
-    </View>
-  );
-
+function SettingsScreen({ navigation, peers }: ProfileProps) {
   const statsCardContents = (
     <View>
       <View centerV>
-        <Text style={styles.cardHeader} marginB-10>
-          Stats
-        </Text>
         <Text>
           <Text style={styles.bold}>20</Text>: Number of message transmissions
         </Text>
@@ -82,10 +49,12 @@ function SettingsScreen(props: { peers: Peers }, { navigation }: ProfileProps) {
       >
         <Ionicons style={styles.white} name="chevron-back" />
       </Button>
-      <Card padding-20>{otherSettingsCardContents}</Card>
-      <Card marginT-20 padding-20>
-        {statsCardContents}
-      </Card>
+
+      <Text style={styles.cardHeader}>Stats</Text>
+      <Card padding-20>{statsCardContents}</Card>
+
+      <Text style={styles.cardHeader}>Peers</Text>
+      <View>{PeersCards(peers)}</View>
     </View>
   );
 }
@@ -94,6 +63,8 @@ const styles = StyleSheet.create({
   cardHeader: {
     fontSize: 20,
     fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 5,
   },
   bold: {
     fontWeight: 'bold',

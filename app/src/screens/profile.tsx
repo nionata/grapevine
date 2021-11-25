@@ -1,5 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { Peers } from 'bluetooth';
 
 import ProfileHome from './profileHome';
@@ -24,6 +25,12 @@ export type ProfileProps = {
 
 function ProfileScreen(props: { peers: Peers }) {
   const Stack = createNativeStackNavigator();
+  const navigation = useNavigation() as ProfileScreenNavigationProp;
+
+  console.log(
+    '[PROFILE] - peers length from profile screen',
+    props.peers?.length || 0
+  );
 
   return (
     <Stack.Navigator>
@@ -34,7 +41,9 @@ function ProfileScreen(props: { peers: Peers }) {
       />
       <Stack.Screen
         name="Settings"
-        children={() => <SettingsScreen peers={props.peers} />}
+        children={() => (
+          <SettingsScreen navigation={navigation} peers={props.peers} />
+        )}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

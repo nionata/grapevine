@@ -131,7 +131,10 @@ class App extends React.Component<AppProps, AppState> {
             name="Grapevine"
             children={() => <HomeScreen messages={this.state.messages} />}
           />
-          <Tab.Screen name="Profile" children={() => <ProfileScreen />} />
+          <Tab.Screen
+            name="Profile"
+            children={() => <ProfileScreen peers={this.state.peers} />}
+          />
         </Tab.Navigator>
 
         {/* floating action button to compose message */}

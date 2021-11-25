@@ -8,7 +8,7 @@ import FirestoreStorage from 'storage/firestore';
 
 import { ProfileProps } from './profile';
 
-function ProfileHome({ navigation }: ProfileProps) {
+function ProfileHome({ navigation, peers }: ProfileProps) {
   const storage = new FirestoreStorage();
   const [messages, setMessages] = useState<Message[]>();
 
@@ -49,7 +49,11 @@ function ProfileHome({ navigation }: ProfileProps) {
         marginB-10
         backgroundColor="blueviolet"
         size={Button.sizes.medium}
-        onPress={() => navigation.navigate('Settings')}
+        onPress={() =>
+          navigation.navigate('Settings', {
+            peers,
+          })
+        }
       >
         <Text white>Settings</Text>
         <Ionicons style={styles.white} name="chevron-forward" />
