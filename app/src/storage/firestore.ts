@@ -106,7 +106,7 @@ export default class FirestoreStorage implements Storage {
 
       // To see if we are "caught up" on the advertising user's messages, we must retrieve this user's
       // high-water marks and the high-water marks of the ad user's messages.
-      let waterMarks: WaterMarks = {
+      const waterMarks: WaterMarks = {
         ...(await waterMarksDocRef(userId, adUserId).get()).data(),
       };
       const adLastAuthoredTime = (
@@ -136,7 +136,7 @@ export default class FirestoreStorage implements Storage {
       //    b. the latest time is greater than the water mark: <prev time> !== <latest time>
       let receivedDocs: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[] =
         [];
-      let updatedWaterMarks = waterMarks;
+      let updatedWaterMarks = { ...waterMarks };
       if (waterMarks?.authored !== adLastAuthoredTime) {
         receivedDocs.push(
           ...(
@@ -164,22 +164,24 @@ export default class FirestoreStorage implements Storage {
         updatedWaterMarks.received = adLastReceivedTime;
       }
 
-      // Write all the updates as a batch so they are all or nothing
+      // Write all the updates as a batch so the ops are all or nothing
       const batch = firestore().batch();
       if (
-        waterMarks?.authored !== updatedWaterMarks?.authored ||
-        waterMarks?.received !== updatedWaterMarks?.received
+        waterMarks.authored !== updatedWaterMarks.authored ||
+        waterMarks.received !== updatedWaterMarks.received
       ) {
         batch.set(waterMarksDocRef(userId, adUserId), updatedWaterMarks);
       }
+      let timestamp = Date.now();
       receivedDocs.forEach((doc) => {
-        const timestamp = Date.now();
+        const data = doc.data();
         batch.set(messageDocRef(userId, 'received', timestamp), {
-          ...doc,
+          ...data,
           receivedAt: timestamp,
           transmit: false,
-          vine: doc.vine + 1,
+          vines: data.vines + 1,
         });
+        timestamp++;
       });
       await batch.commit();
     } catch (err) {

@@ -56,14 +56,18 @@ class App extends React.Component<AppProps, AppState> {
         mtu: 0,
         deviceId: '012132',
       });
-    }).then(() => {
-      this.setState((state) => {
-        return {
-          ...state,
-          isInitializing: false,
-        };
+    })
+      .then(() => {
+        this.setState((state) => {
+          return {
+            ...state,
+            isInitializing: false,
+          };
+        });
+      })
+      .catch((err) => {
+        console.error(err);
       });
-    });
   }
 
   componentWillUnmount() {
@@ -77,7 +81,7 @@ class App extends React.Component<AppProps, AppState> {
 
   async hydrateState() {
     try {
-      const messages = await this.storage.getMessages('authored');
+      const messages = await this.storage.getMessages('received');
       const peers = await this.storage.getPeers();
       this.setState((state) => {
         return {
