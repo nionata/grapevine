@@ -102,10 +102,16 @@ export default class FirestoreStorage implements Storage {
     try {
       const userId = await this.getUserId();
       const { userId: adUserId, receivedAt } = ad;
+      // The native bluetooth module does not support scanning and advertising at the same time.
+      // However, just in case something like this does occur let's just ignore those ads.
+      if (userId === adUserId) {
+        return;
+      }
       await advertisementDocRef(userId, adUserId, receivedAt).set(ad);
 
       // To see if we are "caught up" on the advertising user's messages, we must retrieve this user's
       // high-water marks and the high-water marks of the ad user's messages.
+      // TODO: Add a txn to cover the water mark read and write (read other values with firebase not txn)
       const waterMarks: WaterMarks = {
         ...(await waterMarksDocRef(userId, adUserId).get()).data(),
       };
@@ -125,7 +131,9 @@ export default class FirestoreStorage implements Storage {
       ).docs
         .pop()
         ?.data().createdAt;
-      console.log(waterMarks, adLastAuthoredTime, adLastReceivedTime);
+      console.log(
+        `Comparing water marks: authored ${waterMarks.authored} v ${adLastAuthoredTime} / received ${waterMarks.received} v ${adLastReceivedTime}`
+      );
 
       // The following should handle the cases:
       // 1. There are no water marks (ie. the current user hasn't received from the ad user yet) and
@@ -174,12 +182,15 @@ export default class FirestoreStorage implements Storage {
       }
       let timestamp = Date.now();
       receivedDocs.forEach((doc) => {
-        const data = doc.data();
+        const message = doc.data() as Message;
         batch.set(messageDocRef(userId, 'received', timestamp), {
-          ...data,
+          ...message,
           receivedAt: timestamp,
           transmit: false,
-          vines: data.vines + 1,
+          vines: message.vines + 1,
+        });
+        batch.update(messageDocRef(adUserId, 'authored', message.createdAt), {
+          grapes: firebase.firestore.FieldValue.increment(1),
         });
         timestamp++;
       });

@@ -50,12 +50,6 @@ class App extends React.Component<AppProps, AppState> {
     new Promise(async () => {
       await this.storage.getUserId();
       await this.hydrateState();
-      await this.storage.setAdvertisement({
-        userId: '0',
-        receivedAt: Date.now(),
-        mtu: 0,
-        deviceId: '012132',
-      });
     })
       .then(() => {
         this.setState((state) => {

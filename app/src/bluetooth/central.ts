@@ -4,7 +4,7 @@ import {
   USER_ID_CHARACTERISTIC_UUID,
 } from 'bluetooth/const';
 import { Task } from 'bluetooth';
-import { Storage } from 'storage';
+import { Advertisement, Storage } from 'storage';
 import { decodeUserId } from 'bluetooth/encoding';
 export default class BluetoothCentral implements Task {
   poweredOn: boolean;
@@ -81,15 +81,19 @@ export default class BluetoothCentral implements Task {
       if (!userId) {
         return;
       }
-      console.log(`saving ad from userId ${userId}`);
-      this.storage.setAdvertisement({
+      let advertisement: Advertisement = {
         userId,
         receivedAt: Date.now(),
-        rssi: device.rssi ? device.rssi : undefined,
         mtu: device.mtu,
-        txPowerLevel: device.txPowerLevel ? device.txPowerLevel : undefined,
         deviceId: device.id,
-      });
+      };
+      if (device.rssi) {
+        advertisement.rssi = device.rssi;
+      }
+      if (device.txPowerLevel) {
+        advertisement.txPowerLevel = device.txPowerLevel;
+      }
+      this.storage.setAdvertisement(advertisement);
     } catch (err) {
       console.error(err);
     }

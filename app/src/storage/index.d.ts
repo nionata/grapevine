@@ -38,7 +38,11 @@ export interface Message {
   content: string;
   userId: string;
   transmit: boolean;
+  // The total number of devices the messsage has been transmitted to.
+  // NOTE: This value is only consistent on authored messages.
   grapes: number;
+  // The number of device "hops" this message has made from the author.
+  // NOTE: This value is only consistent on received messages.
   vines: number;
   createdAt: number;
   updatedAt: number;
