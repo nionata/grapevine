@@ -2,6 +2,8 @@ import { Peer, Peers } from 'bluetooth';
 
 export type MessageFilter = 'global' | 'all' | 'authored' | 'received';
 
+export type MessageRefType = 'authored' | 'received';
+
 export interface Storage {
   /**
    * Gets the current users's uuid string
@@ -35,9 +37,11 @@ export interface Storage {
 export interface Message {
   content: string;
   userId: string;
-  createdAt: number;
+  transmit: boolean;
   grapes: number;
   vines: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface Advertisement {
@@ -54,6 +58,6 @@ export interface Advertisement {
  * The largest timestamp read by the user
  */
 export interface WaterMarks {
-  authored: number;
-  received: number;
+  authored?: number;
+  received?: number;
 }
