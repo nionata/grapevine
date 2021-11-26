@@ -2,10 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Message, Messages } from 'api/message';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Peer, Peers } from 'bluetooth';
-import { MessageFilter, Storage } from 'storage';
+import { Advertisement, MessageFilter, Storage } from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
 import uuid from 'react-native-uuid';
 
+/**
+ * @deprecated
+ */
 export default class LocalStorage implements Storage {
   private userId: string;
   private userIdLoaded: Promise<void>;
@@ -14,6 +17,7 @@ export default class LocalStorage implements Storage {
     this.userId = '';
     this.userIdLoaded = this.loadUserId();
   }
+  setAdvertisement: (ad: Advertisement) => Promise<boolean>;
 
   async getUserId(): Promise<string> {
     await this.userIdLoaded;
@@ -37,7 +41,7 @@ export default class LocalStorage implements Storage {
     );
   }
 
-  async setMessage(content: string): Promise<boolean> {
+  async setMessage(content: string): Promise<void> {
     await this.userIdLoaded;
     const message = {
       content,
@@ -52,7 +56,6 @@ export default class LocalStorage implements Storage {
       })
     ).finish();
     await AsyncStorage.setItem(MESSAGES_KEY, fromByteArray(messagesByteArr));
-    return true;
   }
 
   async getPeers(): Promise<Peers> {
