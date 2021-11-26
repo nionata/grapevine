@@ -84,11 +84,12 @@ export default class FirestoreStorage implements Storage {
       const message: Message = {
         content,
         userId,
-        createdAt: timestamp,
         grapes: 0,
         vines: 0,
         transmit: true,
+        createdAt: timestamp,
         updatedAt: timestamp,
+        receivedAt: timestamp,
       };
       await messageDocRef(userId, 'authored', timestamp).set(message);
       console.log('Message saved to firestore');
@@ -192,6 +193,7 @@ export default class FirestoreStorage implements Storage {
         });
         batch.update(messageDocRef(adUserId, 'authored', message.createdAt), {
           grapes: firebase.firestore.FieldValue.increment(1),
+          updatedAt: timestamp,
         });
         timestamp++;
       });
@@ -212,11 +214,10 @@ export default class FirestoreStorage implements Storage {
       // Authored message docs are saved by the createAt timestamp where
       // as received messages are saved by the receivedAt timestamp.
       const timestamp =
-        messageType === 'authored'
-          ? message.createdAt
-          : (message.receivedAt as number);
+        messageType === 'authored' ? message.createdAt : message.receivedAt;
       messageDocRef(userId, messageType, timestamp).update({
         transmit: !message.transmit,
+        updatedAt: timestamp,
       });
     } catch (err) {
       const errorMessage = 'Error toggling transmission';

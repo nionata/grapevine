@@ -53,7 +53,7 @@ export interface Message {
   vines: number;
   createdAt: number;
   updatedAt: number;
-  receivedAt?: number;
+  receivedAt: number;
 }
 
 export interface Advertisement {
