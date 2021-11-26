@@ -93,8 +93,9 @@ export default class FirestoreStorage implements Storage {
       await messageDocRef(userId, 'authored', timestamp).set(message);
       console.log('Message saved to firestore');
     } catch (err) {
-      console.error('Error adding msg to firestore', err);
-      throw Error(`Error adding msg to firestore ${err}`);
+      const errorMessage = 'Error adding msg to firestore';
+      console.error(errorMessage, err);
+      throw Error(`${errorMessage} ${err}`);
     }
   }
 
@@ -196,8 +197,31 @@ export default class FirestoreStorage implements Storage {
       });
       await batch.commit();
     } catch (err) {
-      console.error('Error adding advertisement to firestore', err);
-      throw Error(`Error adding advertisement to firestore ${err}`);
+      const errorMessage = 'Error adding advertisement to firestore';
+      console.error(errorMessage, err);
+      throw Error(`${errorMessage} ${err}`);
+    }
+  }
+
+  async toggleTransmission(
+    messageType: MessageRefType,
+    message: Message
+  ): Promise<void> {
+    try {
+      const userId = await this.getUserId();
+      // Authored message docs are saved by the createAt timestamp where
+      // as received messages are saved by the receivedAt timestamp.
+      const timestamp =
+        messageType === 'authored'
+          ? message.createdAt
+          : (message.receivedAt as number);
+      messageDocRef(userId, messageType, timestamp).update({
+        transmit: !message.transmit,
+      });
+    } catch (err) {
+      const errorMessage = 'Error toggling transmission';
+      console.error(errorMessage, err);
+      throw Error(`${errorMessage} ${err}`);
     }
   }
 

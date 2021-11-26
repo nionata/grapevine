@@ -19,9 +19,16 @@ export interface Storage {
   setMessage: (content: string) => Promise<void>;
   /**
    * Sets a new advertisement for the user and saves any outstanding messages
-   * from the advertising device.
+   * from the advertising device
    */
   setAdvertisement: (ad: Advertisement) => Promise<void>;
+  /**
+   * Toggle the 'transmit' field on a user's message
+   */
+  toggleTransmission: (
+    messageType: MessageRefType,
+    message: Message
+  ) => Promise<void>;
   /**
    * Gets peers
    * @deprecated
