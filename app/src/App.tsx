@@ -51,7 +51,7 @@ class App extends React.Component<AppProps, AppState> {
       await this.storage.getUserId();
       await this.hydrateState();
       await this.storage.setAdvertisement({
-        userId: '1',
+        userId: '0',
         receivedAt: Date.now(),
         mtu: 0,
         deviceId: '012132',

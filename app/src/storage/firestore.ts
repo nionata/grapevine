@@ -173,8 +173,15 @@ export default class FirestoreStorage implements Storage {
         batch.set(waterMarksDocRef(userId, adUserId), updatedWaterMarks);
       }
       receivedDocs.forEach((doc) => {
-        batch.set(messageDocRef(userId, 'received', Date.now()), doc);
+        const timestamp = Date.now();
+        batch.set(messageDocRef(userId, 'received', timestamp), {
+          ...doc,
+          receivedAt: timestamp,
+          transmit: false,
+          vine: doc.vine + 1,
+        });
       });
+      await batch.commit();
     } catch (err) {
       console.error('Error adding advertisement to firestore', err);
       throw Error(`Error adding advertisement to firestore ${err}`);
