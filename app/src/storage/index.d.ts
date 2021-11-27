@@ -27,8 +27,7 @@ export interface Storage {
    */
   toggleTransmission: (
     messageType: MessageRefType,
-    message: Message,
-    transmit: boolean
+    message: Message
   ) => Promise<void>;
   /**
    * Gets peers

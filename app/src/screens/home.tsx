@@ -30,11 +30,7 @@ function HomeScreen(props: {
             color="blueviolet"
             size={20}
             onPress={async () => {
-              await storage.toggleTransmission(
-                'received',
-                item,
-                !item.transmit
-              );
+              await storage.toggleTransmission('received', item);
               await props.refreshMessages();
             }}
           />

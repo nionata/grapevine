@@ -25,11 +25,8 @@ function ProfileHome({ navigation, peers }: ProfileProps) {
     }
   });
 
-  const saveIsTransmittingSetting = async (
-    message: Message,
-    transmit: boolean
-  ): Promise<void> => {
-    await storage.toggleTransmission('authored', message, transmit); // set the transmit value
+  const saveIsTransmittingSetting = async (message: Message): Promise<void> => {
+    await storage.toggleTransmission('authored', message); // set the transmit value
     await getMessages(); // refresh messages
     return;
   };
@@ -62,9 +59,7 @@ function ProfileHome({ navigation, peers }: ProfileProps) {
               onColor={'blueviolet'}
               offColor={'lightgray'}
               value={item.transmit}
-              onValueChange={(value: boolean) =>
-                saveIsTransmittingSetting(item, value)
-              }
+              onValueChange={() => saveIsTransmittingSetting(item)}
               marginR-10
             />
             <Text paddingR-40>{item.content}</Text>

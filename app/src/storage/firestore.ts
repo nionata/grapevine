@@ -207,8 +207,7 @@ export default class FirestoreStorage implements Storage {
 
   async toggleTransmission(
     messageType: MessageRefType,
-    message: Message,
-    transmit: boolean
+    message: Message
   ): Promise<void> {
     try {
       const userId = await this.getUserId();
@@ -217,7 +216,7 @@ export default class FirestoreStorage implements Storage {
       const timestamp =
         messageType === 'authored' ? message.createdAt : message.receivedAt;
       messageDocRef(userId, messageType, timestamp).update({
-        transmit: transmit,
+        transmit: !message.transmit,
         updatedAt: timestamp,
       });
     } catch (err) {
