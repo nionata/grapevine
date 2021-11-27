@@ -25,7 +25,7 @@ const Tab = createBottomTabNavigator();
 class App extends React.Component<AppProps, AppState> {
   private composeRef: React.RefObject<Modal>;
 
-  private storage: Storage;
+  public storage: Storage;
   private bluetoothManager: BluetoothManager;
   private stateTicker: NodeJS.Timer | undefined;
 
@@ -133,7 +133,12 @@ class App extends React.Component<AppProps, AppState> {
         >
           <Tab.Screen
             name="Grapevine"
-            children={() => <HomeScreen messages={this.state.messages} />}
+            children={() => (
+              <HomeScreen
+                messages={this.state.messages}
+                refreshMessages={() => this.updateMessages()}
+              />
+            )}
           />
           <Tab.Screen
             name="Profile"
