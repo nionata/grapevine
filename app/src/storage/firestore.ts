@@ -217,7 +217,7 @@ export default class FirestoreStorage implements Storage {
         messageType === 'authored' ? message.createdAt : message.receivedAt;
       messageDocRef(userId, messageType, timestamp).update({
         transmit: !message.transmit,
-        updatedAt: timestamp,
+        updatedAt: Date.now(),
       });
     } catch (err) {
       const errorMessage = 'Error toggling transmission';
