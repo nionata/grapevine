@@ -1,33 +1,57 @@
 import React from 'react';
-import { Card, Text } from 'react-native-ui-lib';
+import { Card, Text, View } from 'react-native-ui-lib';
 import { Message } from 'storage';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, ListRenderItem, StyleSheet } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { format } from 'date-fns';
+import FirestoreStorage from 'storage/firestore';
 
-function HomeScreen(props: { messages: Message[] }) {
-  const messages = props.messages.map((message) => {
-    return {
-      ...message,
-      createdAt: format(new Date(message.createdAt), 'MMM d, yyyy h:m aaa'),
-    };
-  });
+function HomeScreen(props: {
+  messages: Message[];
+  refreshMessages: () => Promise<void>;
+}) {
+  const storage = new FirestoreStorage();
+  const { messages } = props;
 
-  return (
-    <FlatList
-      data={messages}
-      renderItem={({ item }) => (
-        <Card paddingV-5 paddingH-5 marginH-10 marginV-10 activeOpacity={1}>
-          <Text>{item.content}</Text>
-          <Text style={styles.date}>{item.createdAt}</Text>
-        </Card>
-      )}
-    />
-  );
+  const renderItem: ListRenderItem<Message> = ({ item }) => {
+    const formattedDate = format(
+      new Date(item.createdAt),
+      'MMM d, yyyy h:m aaa'
+    );
+
+    return (
+      <Card paddingV-5 paddingH-5 marginH-10 marginV-10 activeOpacity={1}>
+        <Text>{item.content}</Text>
+        <View row>
+          <Text style={styles.date}>{formattedDate}</Text>
+          <Ionicons
+            style={styles.grapeIcon}
+            name={`heart${item.transmit ? '' : '-outline'}`}
+            color="blueviolet"
+            size={20}
+            onPress={async () => {
+              await storage.toggleTransmission(
+                'received',
+                item,
+                !item.transmit
+              );
+              await props.refreshMessages();
+            }}
+          />
+        </View>
+      </Card>
+    );
+  };
+
+  return <FlatList data={messages} renderItem={renderItem} />;
 }
 
 const styles = StyleSheet.create({
   date: {
     color: 'lightgray',
+  },
+  grapeIcon: {
+    textAlign: 'right',
   },
 });
 

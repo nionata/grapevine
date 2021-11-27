@@ -207,7 +207,8 @@ export default class FirestoreStorage implements Storage {
 
   async toggleTransmission(
     messageType: MessageRefType,
-    message: Message
+    message: Message,
+    transmit: boolean
   ): Promise<void> {
     try {
       const userId = await this.getUserId();
@@ -216,7 +217,7 @@ export default class FirestoreStorage implements Storage {
       const timestamp =
         messageType === 'authored' ? message.createdAt : message.receivedAt;
       messageDocRef(userId, messageType, timestamp).update({
-        transmit: !message.transmit,
+        transmit: transmit,
         updatedAt: timestamp,
       });
     } catch (err) {
@@ -275,7 +276,7 @@ export default class FirestoreStorage implements Storage {
       this.userId = String(userId);
       console.log(`User ${this.userId} signed in`);
     } catch (err) {
-      console.error(err);
+      console.error('Err loading user Id', err);
       // TODO: Implement a timeout - possibly even a util retryTillSuccessWithTimeout
       return this.loadUserId();
     }
