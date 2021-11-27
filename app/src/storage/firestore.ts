@@ -68,10 +68,7 @@ export default class FirestoreStorage implements Storage {
 
       const messages: Message[] = [];
       documents.forEach((documentSnapshot) => {
-        messages.push({
-          ...documentSnapshot.data(),
-          id: documentSnapshot.id,
-        });
+        messages.push(documentSnapshot.data());
       });
       return messages;
     } catch (err) {
@@ -210,7 +207,8 @@ export default class FirestoreStorage implements Storage {
 
   async toggleTransmission(
     messageType: MessageRefType,
-    message: Message
+    message: Message,
+    transmit: boolean
   ): Promise<void> {
     try {
       const userId = await this.getUserId();
@@ -219,7 +217,7 @@ export default class FirestoreStorage implements Storage {
       const timestamp =
         messageType === 'authored' ? message.createdAt : message.receivedAt;
       messageDocRef(userId, messageType, timestamp).update({
-        transmit: !message.transmit,
+        transmit: transmit,
         updatedAt: timestamp,
       });
     } catch (err) {
