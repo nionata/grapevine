@@ -1,9 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Message } from 'api/message';
 import { Peer, Peers } from 'bluetooth';
-import { MessageFilter, Storage } from 'storage';
+import {
+  Advertisement,
+  Message,
+  MessageFilter,
+  MessageRefType,
+  Storage,
+  WaterMarks,
+} from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
 import firestore, {
+  firebase,
   FirebaseFirestoreTypes,
 } from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
@@ -24,23 +31,39 @@ export default class FirestoreStorage implements Storage {
 
   async getMessages(filter: MessageFilter = 'all'): Promise<Message[]> {
     try {
-      let documents: FirebaseFirestoreTypes.QuerySnapshot<Message>;
-      if (filter === 'authored') {
-        console.log(
-          'looking for messages with user ID: ',
-          typeof this.userId,
-          ' bah humbug'
-        );
-        documents = await firestore()
-          .collection<Message>('Messages')
-          .where('userId', '==', await this.getUserId())
-          .orderBy('createdAt', 'desc')
-          .get();
-      } else {
-        documents = await firestore()
-          .collection<Message>('Messages')
-          .orderBy('createdAt', 'desc')
-          .get();
+      const userId = await this.getUserId();
+      // By default, docs are returned in ascending order by document id (timestamp)
+      const authoredMessagesRef = messagesCollectionRef(
+        userId,
+        'authored'
+      ).orderBy('createdAt', 'desc');
+      const receivedMessagesRef = messagesCollectionRef(
+        userId,
+        'received'
+      ).orderBy('createdAt', 'desc');
+
+      let documents: FirebaseFirestoreTypes.QueryDocumentSnapshot<Message>[];
+      switch (filter) {
+        case 'global':
+          documents = (
+            await firestore()
+              .collection<Message>('Messages')
+              .orderBy('createdAt', 'desc')
+              .get()
+          ).docs;
+          break;
+        case 'all':
+          documents = [
+            ...(await authoredMessagesRef.get()).docs,
+            ...(await receivedMessagesRef.get()).docs,
+          ];
+          break;
+        case 'authored':
+          documents = (await authoredMessagesRef.get()).docs;
+          break;
+        case 'received':
+          documents = (await receivedMessagesRef.get()).docs;
+          break;
       }
 
       const messages: Message[] = [];
@@ -50,7 +73,6 @@ export default class FirestoreStorage implements Storage {
           id: documentSnapshot.id,
         });
       });
-
       return messages;
     } catch (err) {
       console.error(err);
@@ -58,19 +80,152 @@ export default class FirestoreStorage implements Storage {
     }
   }
 
-  async setMessage(content: string): Promise<boolean> {
+  async setMessage(content: string): Promise<void> {
     try {
-      await this.userIdLoaded;
-      await firestore().collection('Messages').add({
+      const userId = await this.getUserId();
+      const timestamp = Date.now();
+      const message: Message = {
         content,
-        userId: this.userId,
-        createdAt: Date.now(),
-      });
+        userId,
+        grapes: 0,
+        vines: 0,
+        transmit: true,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        receivedAt: timestamp,
+      };
+      await messageDocRef(userId, 'authored', timestamp).set(message);
       console.log('Message saved to firestore');
-      return true;
     } catch (err) {
-      console.error('Error adding msg to firestore', err);
-      return false;
+      const errorMessage = 'Error adding msg to firestore';
+      console.error(errorMessage, err);
+      throw Error(`${errorMessage} ${err}`);
+    }
+  }
+
+  async setAdvertisement(ad: Advertisement): Promise<void> {
+    try {
+      const userId = await this.getUserId();
+      const { userId: adUserId, receivedAt } = ad;
+      // The native bluetooth module does not support scanning and advertising at the same time.
+      // However, just in case something like this does occur let's just ignore those ads.
+      if (userId === adUserId) {
+        return;
+      }
+      await advertisementDocRef(userId, adUserId, receivedAt).set(ad);
+
+      // To see if we are "caught up" on the advertising user's messages, we must retrieve this user's
+      // high-water marks and the high-water marks of the ad user's messages.
+      // TODO: Add a txn to cover the water mark read and write (read other values with firebase not txn)
+      const waterMarks: WaterMarks = {
+        ...(await waterMarksDocRef(userId, adUserId).get()).data(),
+      };
+      const adLastAuthoredTime = (
+        await messagesCollectionRef(adUserId, 'authored')
+          .orderBy('createdAt')
+          .limitToLast(1)
+          .get()
+      ).docs
+        .pop()
+        ?.data().createdAt;
+      const adLastReceivedTime = (
+        await messagesCollectionRef(adUserId, 'received')
+          .orderBy('createdAt')
+          .limitToLast(1)
+          .get()
+      ).docs
+        .pop()
+        ?.data().createdAt;
+      console.log(
+        `Comparing water marks: authored ${waterMarks.authored} v ${adLastAuthoredTime} / received ${waterMarks.received} v ${adLastReceivedTime}`
+      );
+
+      // The following should handle the cases:
+      // 1. There are no water marks (ie. the current user hasn't received from the ad user yet) and
+      //    a. there are no messages: undefined === undefined
+      //    b. there are messages: undefined !== <latest time>
+      // 2. There are water marks (ie. the current user has received from the ad user before) and
+      //    a. the lastest time is the same as the water mark: <latest time> === <latest time>
+      //    b. the latest time is greater than the water mark: <prev time> !== <latest time>
+      let receivedDocs: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[] =
+        [];
+      let updatedWaterMarks = { ...waterMarks };
+      if (waterMarks?.authored !== adLastAuthoredTime) {
+        receivedDocs.push(
+          ...(
+            await messagesCollectionRef(adUserId, 'authored')
+              .orderBy('createdAt')
+              .startAfter(waterMarks?.authored ? waterMarks.authored : 0)
+              .endAt(adLastAuthoredTime)
+              .where('transmit', '==', true)
+              .get()
+          ).docs
+        );
+        updatedWaterMarks.authored = adLastAuthoredTime;
+      }
+      if (waterMarks?.received !== adLastReceivedTime) {
+        receivedDocs.push(
+          ...(
+            await messagesCollectionRef(adUserId, 'received')
+              .orderBy('createdAt')
+              .startAfter(waterMarks?.received ? waterMarks.received : 0)
+              .endAt(adLastReceivedTime)
+              .where('transmit', '==', true)
+              .get()
+          ).docs
+        );
+        updatedWaterMarks.received = adLastReceivedTime;
+      }
+
+      // Write all the updates as a batch so the ops are all or nothing
+      const batch = firestore().batch();
+      if (
+        waterMarks.authored !== updatedWaterMarks.authored ||
+        waterMarks.received !== updatedWaterMarks.received
+      ) {
+        batch.set(waterMarksDocRef(userId, adUserId), updatedWaterMarks);
+      }
+      let timestamp = Date.now();
+      receivedDocs.forEach((doc) => {
+        const message = doc.data() as Message;
+        batch.set(messageDocRef(userId, 'received', timestamp), {
+          ...message,
+          receivedAt: timestamp,
+          transmit: false,
+          vines: message.vines + 1,
+        });
+        batch.update(messageDocRef(adUserId, 'authored', message.createdAt), {
+          grapes: firebase.firestore.FieldValue.increment(1),
+          updatedAt: timestamp,
+        });
+        timestamp++;
+      });
+      await batch.commit();
+    } catch (err) {
+      const errorMessage = 'Error adding advertisement to firestore';
+      console.error(errorMessage, err);
+      throw Error(`${errorMessage} ${err}`);
+    }
+  }
+
+  async toggleTransmission(
+    messageType: MessageRefType,
+    message: Message
+  ): Promise<void> {
+    try {
+      const userId = await this.getUserId();
+      // Authored message docs are saved by the createAt timestamp where
+      // as received messages are saved by the receivedAt timestamp.
+      const timestamp =
+        messageType === 'authored' ? message.createdAt : message.receivedAt;
+      messageDocRef(userId, messageType, timestamp).update({
+        transmit: !message.transmit,
+        updatedAt: timestamp,
+      });
+    } catch (err) {
+      const errorMessage = 'Error toggling transmission';
+      console.error(errorMessage, err);
+      throw Error(`${errorMessage} ${err}`);
     }
   }
 
@@ -133,3 +288,35 @@ export default class FirestoreStorage implements Storage {
     await AsyncStorage.multiRemove([USER_ID_KEY, PEERS_KEY, MESSAGES_KEY]);
   }
 }
+
+const messagesCollectionRef = (userId: string, type: MessageRefType) =>
+  firestore().collection('Messagesv1').doc(userId).collection(type);
+
+const messageDocRef = (
+  userId: string,
+  type: MessageRefType,
+  timestamp: number
+) =>
+  firestore()
+    .collection<Message>('Messagesv1')
+    .doc(userId)
+    .collection(type)
+    .doc(String(timestamp));
+
+const advertisementDocRef = (
+  userId: string,
+  adUserId: string,
+  timestamp: number
+) =>
+  firestore()
+    .collection('Ads')
+    .doc(userId)
+    .collection(adUserId)
+    .doc(String(timestamp));
+
+const waterMarksDocRef = (userId: string, adUserId: string) =>
+  firestore()
+    .collection<WaterMarks>('WaterMarks')
+    .doc(userId)
+    .collection('marks')
+    .doc(adUserId);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Text } from 'react-native-ui-lib';
-import { Message } from 'api/message';
+import { Message } from 'storage';
 import { FlatList, StyleSheet } from 'react-native';
 import { format } from 'date-fns';
 

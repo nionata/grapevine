@@ -3,7 +3,9 @@ import { TextDecoder, TextEncoder } from 'web-encoding';
 import { AD_LOCAL_NAME_PREFIX } from './const';
 
 export const decodeUserId = (value: string): string => {
-  return decode(value).substring(AD_LOCAL_NAME_PREFIX.length);
+  const decodedValue = decode(value);
+  const userId = decodedValue.substring(AD_LOCAL_NAME_PREFIX.length);
+  return decodedValue.length > userId.length ? userId : '';
 };
 
 export const decode = (encodedValue: string): string => {

@@ -49,14 +49,18 @@ class App extends React.Component<AppProps, AppState> {
     new Promise(async () => {
       await this.storage.getUserId();
       await this.hydrateState();
-    }).then(() => {
-      this.setState((state) => {
-        return {
-          ...state,
-          isInitializing: false,
-        };
+    })
+      .then(() => {
+        this.setState((state) => {
+          return {
+            ...state,
+            isInitializing: false,
+          };
+        });
+      })
+      .catch((err) => {
+        console.error(err);
       });
-    });
   }
 
   componentWillUnmount() {
