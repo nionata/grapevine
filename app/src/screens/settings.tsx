@@ -9,8 +9,8 @@ import { Peers } from 'bluetooth';
 import cardStyles from '../styles/cards';
 
 function PeersCards(peers: Peers | null) {
-  if (!peers) {
-    return <Text>No Devices found.</Text>;
+  if (!peers || Object.keys(peers).length === 0) {
+    return <Text>No peer devices found.</Text>;
   }
 
   const peerValues = Object.values(peers);
