@@ -10,7 +10,7 @@ import Modal from 'react-native-modalbox';
 // Custom
 import { AppProps, AppState } from 'index';
 import BluetoothManager from 'bluetooth/manager';
-import { Storage } from 'storage';
+import { Message, Storage } from 'storage';
 import FirestoreStorage from 'storage/firestore';
 import { TEST_MESSAGES, TEST_PEERS } from 'data.test';
 import { TESTING } from 'const';
@@ -137,6 +137,9 @@ class App extends React.Component<AppProps, AppState> {
               <HomeScreen
                 messages={this.state.messages}
                 refreshMessages={() => this.updateMessages()}
+                toggleTransmission={(message: Message) =>
+                  this.storage.toggleTransmission('received', message)
+                }
               />
             )}
           />

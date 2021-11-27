@@ -4,13 +4,12 @@ import { Message } from 'storage';
 import { FlatList, ListRenderItem, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { format } from 'date-fns';
-import FirestoreStorage from 'storage/firestore';
 
 function HomeScreen(props: {
   messages: Message[];
   refreshMessages: () => Promise<void>;
+  toggleTransmission: (message: Message) => Promise<void>;
 }) {
-  const storage = new FirestoreStorage();
   const { messages } = props;
 
   const renderItem: ListRenderItem<Message> = ({ item }) => {
@@ -30,7 +29,7 @@ function HomeScreen(props: {
             color="blueviolet"
             size={20}
             onPress={async () => {
-              await storage.toggleTransmission('received', item);
+              await props.toggleTransmission(item);
               await props.refreshMessages();
             }}
           />

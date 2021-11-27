@@ -25,9 +25,9 @@ export default class BluetoothManager {
    */
   async start(): Promise<void> {
     const prefix = (message: string) => `BluetoothManager.start: ${message}`;
-    // Let's first stop the tasks to clear out any stale advertisements or scans.
-    // This will correct the case where the AD format changes, but is still being advertised.
-    await this.stop();
+    // Stop the peripheral to clear out any stale advertisements. This will correct the
+    // case where the AD format changes, but is still being advertised.
+    await this.peripheral.stop();
     console.log(prefix('Scheduling bluetooth tasks'));
     const taskRunner = async () => {
       try {
