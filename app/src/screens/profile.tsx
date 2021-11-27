@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { Peers } from 'bluetooth';
 
+import { Storage } from 'storage';
 import ProfileHome from './profileHome';
 import SettingsScreen from './settings';
 
@@ -21,9 +22,10 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 export type ProfileProps = {
   navigation: ProfileScreenNavigationProp;
   peers: Peers;
+  storage: Storage;
 };
 
-function ProfileScreen(props: { peers: Peers }) {
+function ProfileScreen(props: { peers: Peers; storage: Storage }) {
   const Stack = createNativeStackNavigator();
   const navigation = useNavigation() as ProfileScreenNavigationProp;
 
@@ -32,17 +34,30 @@ function ProfileScreen(props: { peers: Peers }) {
     props.peers?.length || 0
   );
 
+  console.log('[PROFILE] - typeof storage', typeof props.storage);
+
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="ProfileHome"
-        component={ProfileHome}
+        // component={ProfileHome}
+        children={() => (
+          <ProfileHome
+            navigation={navigation}
+            peers={props.peers}
+            storage={props.storage}
+          />
+        )}
         options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Settings"
         children={() => (
-          <SettingsScreen navigation={navigation} peers={props.peers} />
+          <SettingsScreen
+            navigation={navigation}
+            peers={props.peers}
+            storage={props.storage}
+          />
         )}
         options={{ headerShown: false }}
       />

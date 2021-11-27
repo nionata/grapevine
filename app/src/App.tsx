@@ -142,7 +142,9 @@ class App extends React.Component<AppProps, AppState> {
           />
           <Tab.Screen
             name="Profile"
-            children={() => <ProfileScreen peers={this.state.peers} />}
+            children={() => (
+              <ProfileScreen peers={this.state.peers} storage={this.storage} />
+            )}
           />
         </Tab.Navigator>
 

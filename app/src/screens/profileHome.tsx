@@ -4,16 +4,15 @@ import { View, Text, Card, Switch, Button } from 'react-native-ui-lib';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { Message } from 'storage';
-import FirestoreStorage from 'storage/firestore';
 
 import { ProfileProps } from './profile';
 import cardStyles from 'styles/cards';
 
-function ProfileHome({ navigation, peers }: ProfileProps) {
-  const storage = new FirestoreStorage();
+function ProfileHome({ navigation, peers, storage }: ProfileProps) {
   const [messages, setMessages] = useState<Message[]>();
 
   const getMessages: () => Promise<void> = async () => {
+    console.log('[PROFILE HOME] - typeof storage', typeof storage);
     const userMessagesFromFirestore = await storage.getMessages('authored');
     setMessages(userMessagesFromFirestore);
   };
