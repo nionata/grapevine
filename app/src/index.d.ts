@@ -4,7 +4,10 @@ import { Peers } from 'bluetooth';
 interface AppProps {}
 
 interface AppState {
-  messages: Message[];
+  messages: {
+    authored: Message[];
+    received: Message[];
+  };
   peers: Peers;
   isInitializing: boolean;
 }

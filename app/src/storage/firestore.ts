@@ -4,7 +4,7 @@ import {
   Advertisement,
   Message,
   MessageFilter,
-  MessageRefType,
+  MessageType,
   Storage,
   WaterMarks,
 } from 'storage';
@@ -206,7 +206,7 @@ export default class FirestoreStorage implements Storage {
   }
 
   async toggleTransmission(
-    messageType: MessageRefType,
+    messageType: MessageType,
     message: Message
   ): Promise<void> {
     try {
@@ -286,14 +286,10 @@ export default class FirestoreStorage implements Storage {
   }
 }
 
-const messagesCollectionRef = (userId: string, type: MessageRefType) =>
+const messagesCollectionRef = (userId: string, type: MessageType) =>
   firestore().collection('Messagesv1').doc(userId).collection(type);
 
-const messageDocRef = (
-  userId: string,
-  type: MessageRefType,
-  timestamp: number
-) =>
+const messageDocRef = (userId: string, type: MessageType, timestamp: number) =>
   firestore()
     .collection<Message>('Messagesv1')
     .doc(userId)

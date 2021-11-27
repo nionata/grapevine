@@ -10,7 +10,7 @@ import Modal from 'react-native-modalbox';
 // Custom
 import { AppProps, AppState } from 'index';
 import BluetoothManager from 'bluetooth/manager';
-import { Message, Storage } from 'storage';
+import { Message, MessageType, Storage } from 'storage';
 import FirestoreStorage from 'storage/firestore';
 import { TEST_MESSAGES, TEST_PEERS } from 'data.test';
 import { TESTING } from 'const';
@@ -41,7 +41,10 @@ class App extends React.Component<AppProps, AppState> {
     });
 
     this.state = {
-      messages: TESTING ? TEST_MESSAGES : [],
+      messages: {
+        authored: TESTING ? TEST_MESSAGES : [],
+        received: TESTING ? TEST_MESSAGES : [],
+      },
       peers: TESTING ? TEST_PEERS : {},
       isInitializing: true,
     };
@@ -79,7 +82,10 @@ class App extends React.Component<AppProps, AppState> {
       this.setState((state) => {
         return {
           ...state,
-          messages: messages,
+          messages: {
+            ...state.messages,
+            received: messages,
+          },
           peers: {
             ...state.peers,
             ...peers,
@@ -92,13 +98,16 @@ class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  async updateMessages() {
+  async updateMessages(type: MessageType) {
     try {
-      const messages = await this.storage.getMessages('received');
+      const messages = await this.storage.getMessages(type);
       this.setState((state) => {
         return {
           ...state,
-          messages,
+          messages: {
+            ...state.messages,
+            [type]: messages,
+          },
         };
       });
     } catch (err) {
@@ -135,8 +144,8 @@ class App extends React.Component<AppProps, AppState> {
             name="Grapevine"
             children={() => (
               <HomeScreen
-                messages={this.state.messages}
-                refreshMessages={() => this.updateMessages()}
+                messages={this.state.messages.received}
+                refreshMessages={() => this.updateMessages('received')}
                 toggleTransmission={(message: Message) =>
                   this.storage.toggleTransmission('received', message)
                 }
@@ -146,7 +155,10 @@ class App extends React.Component<AppProps, AppState> {
           <Tab.Screen
             name="Profile"
             children={() => (
-              <ProfileScreen peers={this.state.peers} storage={this.storage} />
+              <ProfileScreen
+                peers={this.state.peers}
+                messages={this.state.messages.authored}
+              />
             )}
           />
         </Tab.Navigator>
@@ -164,7 +176,7 @@ class App extends React.Component<AppProps, AppState> {
             storage={this.storage}
             requestClose={() => {
               this.composeRef?.current?.close();
-              this.updateMessages();
+              this.updateMessages('authored');
             }}
           />
         </Modal>

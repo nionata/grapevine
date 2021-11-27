@@ -2,7 +2,7 @@ import { Peer, Peers } from 'bluetooth';
 
 export type MessageFilter = 'global' | 'all' | 'authored' | 'received';
 
-export type MessageRefType = 'authored' | 'received';
+export type MessageType = 'authored' | 'received';
 
 export interface Storage {
   /**
@@ -26,7 +26,7 @@ export interface Storage {
    * Toggle the 'transmit' field on a user's message
    */
   toggleTransmission: (
-    messageType: MessageRefType,
+    messageType: MessageType,
     message: Message
   ) => Promise<void>;
   /**
