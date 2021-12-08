@@ -201,10 +201,13 @@ export default class FirestoreStorage implements Storage {
             transmit: false,
             vines: message.vines + 1,
           });
-          txn.update(messageDocRef(adUserId, 'authored', message.createdAt), {
-            grapes: firebase.firestore.FieldValue.increment(1),
-            updatedAt: receivedAt,
-          });
+          txn.update(
+            messageDocRef(message.userId, 'authored', message.createdAt),
+            {
+              grapes: firebase.firestore.FieldValue.increment(1),
+              updatedAt: receivedAt,
+            }
+          );
           receivedAt++;
         });
       });
