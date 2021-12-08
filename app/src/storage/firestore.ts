@@ -110,12 +110,21 @@ export default class FirestoreStorage implements Storage {
         return;
       }
       await advertisementDocRef(userId, adUserId, receivedAt).set(ad);
+      await this.tryToTransmit(adUserId, receivedAt);
+    } catch (err) {
+      const errorMessage = 'Error adding advertisement to firestore';
+      console.error(errorMessage, err);
+      throw Error(`${errorMessage} ${err}`);
+    }
+  }
 
+  private async tryToTransmit(adUserId: string, receivedAt: number) {
+    const userId = await this.getUserId();
+    await firestore().runTransaction(async (txn) => {
       // To see if we are "caught up" on the advertising user's messages, we must retrieve this user's
       // high-water marks and the high-water marks of the ad user's messages.
-      // TODO: Add a txn to cover the water mark read and write (read other values with firebase not txn)
       const waterMarks: WaterMarks = {
-        ...(await waterMarksDocRef(userId, adUserId).get()).data(),
+        ...(await txn.get(waterMarksDocRef(userId, adUserId))).data(),
       };
       const adLastAuthoredTime = (
         await messagesCollectionRef(adUserId, 'authored')
@@ -127,12 +136,12 @@ export default class FirestoreStorage implements Storage {
         ?.data().createdAt;
       const adLastReceivedTime = (
         await messagesCollectionRef(adUserId, 'received')
-          .orderBy('createdAt')
+          .orderBy('receivedAt')
           .limitToLast(1)
           .get()
       ).docs
         .pop()
-        ?.data().createdAt;
+        ?.data().receivedAt;
       console.log(
         `Comparing water marks: authored ${waterMarks.authored} v ${adLastAuthoredTime} / received ${waterMarks.received} v ${adLastReceivedTime}`
       );
@@ -164,7 +173,7 @@ export default class FirestoreStorage implements Storage {
         receivedDocs.push(
           ...(
             await messagesCollectionRef(adUserId, 'received')
-              .orderBy('createdAt')
+              .orderBy('receivedAt')
               .startAfter(waterMarks?.received ? waterMarks.received : 0)
               .endAt(adLastReceivedTime)
               .where('transmit', '==', true)
@@ -174,35 +183,31 @@ export default class FirestoreStorage implements Storage {
         updatedWaterMarks.received = adLastReceivedTime;
       }
 
-      // Write all the updates as a batch so the ops are all or nothing
-      const batch = firestore().batch();
+      // The water marks and message r/w must be wrapped in a txn to ensure they remain consistent.
+      // Since we are only reading ad user messages we that op does not have to be apart of the txn.
+      // Additionally, txns don't support the advanced querying that we perform during those reads.
       if (
         waterMarks.authored !== updatedWaterMarks.authored ||
         waterMarks.received !== updatedWaterMarks.received
       ) {
-        batch.set(waterMarksDocRef(userId, adUserId), updatedWaterMarks);
+        txn.set(waterMarksDocRef(userId, adUserId), updatedWaterMarks);
       }
-      let timestamp = Date.now();
       receivedDocs.forEach((doc) => {
         const message = doc.data() as Message;
-        batch.set(messageDocRef(userId, 'received', timestamp), {
+        txn.set(messageDocRef(userId, 'received', receivedAt), {
           ...message,
-          receivedAt: timestamp,
+          receivedAt,
+          updatedAt: receivedAt,
           transmit: false,
           vines: message.vines + 1,
         });
-        batch.update(messageDocRef(adUserId, 'authored', message.createdAt), {
+        txn.update(messageDocRef(adUserId, 'authored', message.createdAt), {
           grapes: firebase.firestore.FieldValue.increment(1),
-          updatedAt: timestamp,
+          updatedAt: receivedAt,
         });
-        timestamp++;
+        receivedAt++;
       });
-      await batch.commit();
-    } catch (err) {
-      const errorMessage = 'Error adding advertisement to firestore';
-      console.error(errorMessage, err);
-      throw Error(`${errorMessage} ${err}`);
-    }
+    });
   }
 
   async toggleTransmission(
