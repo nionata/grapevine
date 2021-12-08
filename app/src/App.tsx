@@ -35,6 +35,29 @@ class App extends React.Component<AppProps, AppState> {
     this.composeRef = React.createRef();
 
     this.storage = new FirestoreStorage();
+    this.storage.on('transmission', async () => {
+      const messages = await this.storage.getMessages('received');
+      this.setState((state) => {
+        return {
+          ...state,
+          messages,
+        };
+      });
+      await this.hydrateState();
+    });
+    this.storage.on('peer', async () => {
+      const peers = await this.storage.getPeers();
+      this.setState((state) => {
+        return {
+          ...state,
+          peers: {
+            ...state.peers,
+            ...peers,
+          },
+        };
+      });
+    });
+
     this.bluetoothManager = new BluetoothManager(this.storage);
     this.bluetoothManager.start().then(() => {
       console.log('Bluetooth manager started');
@@ -80,7 +103,7 @@ class App extends React.Component<AppProps, AppState> {
       this.setState((state) => {
         return {
           ...state,
-          messages: messages,
+          messages,
           peers: {
             ...state.peers,
             ...peers,

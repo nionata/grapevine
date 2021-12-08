@@ -4,6 +4,10 @@ export type MessageFilter = 'global' | 'all' | 'authored' | 'received';
 
 export type MessageRefType = 'authored' | 'received';
 
+export type StorageEvent = 'transmission' | 'peer';
+
+export type StorageEventCallback = () => Promise<void>;
+
 export interface Storage {
   /**
    * Gets the current users's uuid string
@@ -29,6 +33,10 @@ export interface Storage {
     messageType: MessageRefType,
     message: Message
   ) => Promise<void>;
+  /**
+   * Invoke a callback function on a StorageEvent
+   */
+  on: (events: StorageEvent, callback: StorageEventCallback) => void;
   /**
    * Gets peers
    * @deprecated

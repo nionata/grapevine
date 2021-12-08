@@ -6,6 +6,8 @@ import {
   MessageFilter,
   MessageRefType,
   Storage,
+  StorageEventCallback,
+  StorageEvent,
   WaterMarks,
 } from 'storage';
 import { MESSAGES_KEY, PEERS_KEY, USER_ID_KEY } from './const';
@@ -18,10 +20,15 @@ import auth from '@react-native-firebase/auth';
 export default class FirestoreStorage implements Storage {
   private userId: string;
   private userIdLoaded: Promise<void>;
+  private eventCallbacks: { [key in StorageEvent]: StorageEventCallback[] };
 
   constructor() {
     this.userId = '';
     this.userIdLoaded = this.loadUserId();
+    this.eventCallbacks = {
+      transmission: [],
+      peer: [],
+    };
   }
 
   async getUserId(): Promise<string> {
@@ -120,7 +127,7 @@ export default class FirestoreStorage implements Storage {
   private async tryToTransmit(adUserId: string, receivedAt: number) {
     try {
       const userId = await this.getUserId();
-      await firestore().runTransaction(async (txn) => {
+      const didTransmit = await firestore().runTransaction(async (txn) => {
         // To see if we are "caught up" on the advertising user's messages, we must retrieve this user's
         // high-water marks and the high-water marks of the ad user's messages.
         const waterMarks: WaterMarks = {
@@ -191,26 +198,31 @@ export default class FirestoreStorage implements Storage {
           waterMarks.received !== updatedWaterMarks.received
         ) {
           txn.set(waterMarksDocRef(userId, adUserId), updatedWaterMarks);
-        }
-        receivedDocs.forEach((doc) => {
-          const message = doc.data() as Message;
-          txn.set(messageDocRef(userId, 'received', receivedAt), {
-            ...message,
-            receivedAt,
-            updatedAt: receivedAt,
-            transmit: false,
-            vines: message.vines + 1,
-          });
-          txn.update(
-            messageDocRef(message.userId, 'authored', message.createdAt),
-            {
-              grapes: firebase.firestore.FieldValue.increment(1),
+          receivedDocs.forEach((doc) => {
+            const message = doc.data() as Message;
+            txn.set(messageDocRef(userId, 'received', receivedAt), {
+              ...message,
+              receivedAt,
               updatedAt: receivedAt,
-            }
-          );
-          receivedAt++;
-        });
+              transmit: false,
+              vines: message.vines + 1,
+            });
+            txn.update(
+              messageDocRef(message.userId, 'authored', message.createdAt),
+              {
+                grapes: firebase.firestore.FieldValue.increment(1),
+                updatedAt: receivedAt,
+              }
+            );
+            receivedAt++;
+          });
+          return true;
+        }
+        return false;
       });
+      if (didTransmit) {
+        this.onEvent('transmission');
+      }
     } catch (err) {
       console.error('Failed to transmit messages', err);
     }
@@ -237,6 +249,14 @@ export default class FirestoreStorage implements Storage {
     }
   }
 
+  on(event: StorageEvent, callback: StorageEventCallback): void {
+    this.eventCallbacks[event].push(callback);
+  }
+
+  private async onEvent(event: StorageEvent) {
+    await Promise.allSettled(this.eventCallbacks[event].map((fn) => fn()));
+  }
+
   async getPeers(): Promise<Peers> {
     const encodedPeers = await AsyncStorage.getItem(PEERS_KEY);
     if (!encodedPeers) {
@@ -249,6 +269,7 @@ export default class FirestoreStorage implements Storage {
     let peers = await this.getPeers();
     peers[id] = peer;
     await AsyncStorage.setItem(PEERS_KEY, JSON.stringify(peers));
+    this.onEvent('peer');
   }
 
   /**
