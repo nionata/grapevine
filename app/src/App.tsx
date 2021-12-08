@@ -46,9 +46,10 @@ class App extends React.Component<AppProps, AppState> {
       isInitializing: true,
     };
     this.stateTicker = setInterval(() => this.hydrateState(), 5 * 1000);
-    new Promise(async () => {
+    new Promise<void>(async (resolve) => {
       await this.storage.getUserId();
       await this.hydrateState();
+      resolve();
     })
       .then(() => {
         this.setState((state) => {

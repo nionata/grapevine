@@ -78,7 +78,7 @@ export default class BluetoothCentral implements Task {
         return;
       }
       const userId = decodeUserId(device.localName);
-      if (!userId) {
+      if (userId === '') {
         return;
       }
       let advertisement: Advertisement = {
